@@ -1,6 +1,5 @@
 import { ACTIONS } from "./data/actions.js";
 import {
-  getDayRecord,
   isActionRecorded,
   setActionRecorded,
   isActionRecordedInMonth,
@@ -11,7 +10,7 @@ import { getTodayDiagnosisItem, answerDiagnosis } from "./js/ecodiagnosis.js";
 import { getMonthReading, saveMonthReading } from "./js/meterreading.js";
 import { fetchInputItems, fetchEnergyCodes, fetchEnergyCostCodes } from "./js/api.js";
 
-const { createApp, ref, reactive, computed, onMounted } = Vue;
+const { createApp, ref, reactive, computed } = Vue;
 
 function todayDateKey() {
   const d = new Date();
@@ -84,9 +83,7 @@ const app = createApp({
     function submitQuizAnswer(action, optionIndex) {
       const result = answerQuiz(store, todayKey, optionIndex);
       quiz.value = { ...quiz.value, answeredOption: optionIndex, correct: result.correct };
-      if (result.correct) {
-        setActionRecorded(store, todayKey, action.recordIndex);
-      }
+      setActionRecorded(store, todayKey, action.recordIndex);
     }
 
     async function openEcoDiagnosis(action) {
@@ -196,6 +193,7 @@ const app = createApp({
                   <p v-if="quiz.answeredOption !== null">
                     {{ quiz.correct ? '正解！' : '不正解' }} - {{ quiz.question.explanation }}
                   </p>
+                  <button class="btn" @click="closeActionDetail">閉じる</button>
                 </div>
               </template>
 
@@ -214,6 +212,7 @@ const app = createApp({
                       {{ opt.disp }}
                     </button>
                   </div>
+                  <button class="btn" @click="closeActionDetail">閉じる</button>
                 </div>
               </template>
 
@@ -229,6 +228,7 @@ const app = createApp({
                     <input type="number" v-model="meterValues[c.code]">
                   </div>
                   <button class="btn btn-primary" @click="submitMeterReading(action)">保存</button>
+                  <button class="btn" @click="closeActionDetail">閉じる</button>
                 </div>
               </template>
             </div>
