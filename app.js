@@ -1,5 +1,6 @@
 import { ACTIONS } from "./data/actions.js";
 import {
+  getDayRecord,
   isActionRecorded,
   setActionRecorded,
   isActionRecordedInMonth,
@@ -53,6 +54,17 @@ const app = createApp({
     const totalPoints = computed(() =>
       countPointsForRange(store, dateKeyDaysAgo(60), todayKey)
     );
+
+    const historyDays = computed(() => {
+      const days = [];
+      for (let i = 59; i >= 0; i--) {
+        const key = dateKeyDaysAgo(i);
+        const record = getDayRecord(store, key);
+        const points = record.split("").filter((c) => c === "1").length;
+        days.push({ key, points, hasPoint: points > 0 });
+      }
+      return days;
+    });
 
     function isDone(action) {
       if (action.type === "meter-reading") {
@@ -147,6 +159,7 @@ const app = createApp({
       energyCostCodes,
       meterValues,
       totalPoints,
+      historyDays,
       markSimpleDone,
       markExternalDone,
       openQuiz,
@@ -237,7 +250,12 @@ const app = createApp({
       </section>
 
       <section v-if="currentTab === 'history'">
-        <p>履歴画面は次のタスクで実装します。</p>
+        <p>直近60日間の記録(色付き=ポイント獲得日)</p>
+        <div class="history-calendar">
+          <div v-for="d in historyDays" :key="d.key" class="history-day" :class="{'has-point': d.hasPoint}">
+            {{ d.key.slice(4) }}<br>{{ d.points }}pt
+          </div>
+        </div>
       </section>
     </div>
   `,
