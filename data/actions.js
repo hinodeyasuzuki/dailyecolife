@@ -1,0 +1,14 @@
+export const ACTIONS = [
+  { id: "quiz", recordIndex: 0, order: 1, category: "情報", label: "環境クイズ", type: "quiz" },
+  { id: "packaging", recordIndex: 1, order: 2, category: "ごみ・資源", label: "包装少ない購入", type: "simple" },
+  { id: "foodloss", recordIndex: 2, order: 3, category: "ごみ・資源", label: "食品ロスゼロ", type: "simple" },
+  { id: "recycle", recordIndex: 3, order: 4, category: "ごみ・資源", label: "紙・プラ全量リサイクル", type: "simple" },
+  { id: "energysave", recordIndex: 4, order: 5, category: "省エネ", label: "省エネの工夫", type: "simple" },
+  { id: "lesscar", recordIndex: 5, order: 6, category: "省エネ", label: "車の使用を減らした", type: "simple" },
+  { id: "news", recordIndex: 6, order: 7, category: "情報", label: "環境ニュースで情報収集", type: "simple" },
+  { id: "talk", recordIndex: 7, order: 8, category: "情報", label: "環境の話をした", type: "simple" },
+  { id: "secondhand", recordIndex: 8, order: 9, category: "過去のこと", label: "中古品購入", type: "external", url: "https://hinodeyasuzuki.github.io/myecoliferecords/" },
+  { id: "repair", recordIndex: 9, order: 10, category: "過去のこと", label: "修理修繕・リペア", type: "external", url: "https://hinodeyasuzuki.github.io/myecoliferecords/" },
+  { id: "ecocheck", recordIndex: 10, order: 11, category: "自分の暮らし", label: "エコ診断", type: "eco-diagnosis" },
+  { id: "meterread", recordIndex: 11, order: 12, category: "自分の暮らし", label: "検針票記録", type: "meter-reading" },
+];
