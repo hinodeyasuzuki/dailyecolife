@@ -27,7 +27,7 @@ test("getTodayQuiz: 未キャッシュ時はfetchFnを呼びキャッシュす�
   let calledUrl = null;
   const fetchFn = async (url) => {
     calledUrl = url;
-    return { json: async () => sampleQuestion };
+    return { ok: true, json: async () => sampleQuestion };
   };
   const result = await getTodayQuiz(store, "20260826", fetchFn);
   assert.equal(calledUrl, QUIZ_API_URL);
@@ -42,7 +42,7 @@ test("getTodayQuiz: キャッシュ済みならfetchFnを呼ばない", async ()
     throw new Error("呼ばれてはいけない");
   };
   await new Promise((resolve) => {
-    const seedFetch = async () => ({ json: async () => sampleQuestion });
+    const seedFetch = async () => ({ ok: true, json: async () => sampleQuestion });
     getTodayQuiz(store, "20260826", seedFetch).then(resolve);
   });
   const result = await getTodayQuiz(store, "20260826", fetchFn);
@@ -51,7 +51,7 @@ test("getTodayQuiz: キャッシュ済みならfetchFnを呼ばない", async ()
 
 test("answerQuiz: 正解を選ぶとcorrect=trueで記録される", async () => {
   const store = createMockStore();
-  const fetchFn = async () => ({ json: async () => sampleQuestion });
+  const fetchFn = async () => ({ ok: true, json: async () => sampleQuestion });
   await getTodayQuiz(store, "20260826", fetchFn);
   const result = answerQuiz(store, "20260826", 2);
   assert.equal(result.correct, true);
@@ -62,15 +62,21 @@ test("answerQuiz: 正解を選ぶとcorrect=trueで記録される", async () =>
 
 test("answerQuiz: 不正解を選ぶとcorrect=falseで記録される", async () => {
   const store = createMockStore();
-  const fetchFn = async () => ({ json: async () => sampleQuestion });
+  const fetchFn = async () => ({ ok: true, json: async () => sampleQuestion });
   await getTodayQuiz(store, "20260826", fetchFn);
   const result = answerQuiz(store, "20260826", 1);
   assert.equal(result.correct, false);
 });
 
+test("getTodayQuiz: response.okがfalseの場合はエラーがthrowされる", async () => {
+  const store = createMockStore();
+  const fetchFn = async () => ({ ok: false, status: 500, json: async () => ({}) });
+  await assert.rejects(() => getTodayQuiz(store, "20260826", fetchFn), /HTTP 500/);
+});
+
 test("answerQuiz: 回答済みの場合は再回答できず元の結果を返す", async () => {
   const store = createMockStore();
-  const fetchFn = async () => ({ json: async () => sampleQuestion });
+  const fetchFn = async () => ({ ok: true, json: async () => sampleQuestion });
   await getTodayQuiz(store, "20260826", fetchFn);
   answerQuiz(store, "20260826", 2);
   const second = answerQuiz(store, "20260826", 1);

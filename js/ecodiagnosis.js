@@ -15,7 +15,18 @@ export function getTodayDiagnosisItem(store, dateKey, allItems, randomFn = Math.
     all[dateKey] = entry;
     saveJSON(store, ECODIAGNOSIS_KEY, all);
   }
-  const item = allItems.find((i) => i.id === entry.itemId);
+  let item = allItems.find((i) => i.id === entry.itemId);
+  if (!item) {
+    if (entry.answerVal === null) {
+      const index = Math.floor(randomFn() * allItems.length);
+      item = allItems[index];
+      entry = { itemId: item.id, answerVal: null };
+      all[dateKey] = entry;
+      saveJSON(store, ECODIAGNOSIS_KEY, all);
+    } else {
+      return { item: null, answerVal: entry.answerVal };
+    }
+  }
   return { item, answerVal: entry.answerVal };
 }
 

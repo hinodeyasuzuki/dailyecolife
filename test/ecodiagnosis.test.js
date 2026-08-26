@@ -46,3 +46,23 @@ test("answerDiagnosis: 回答済みなら上書きしない", () => {
   const result = getTodayDiagnosisItem(store, "20260826", items, () => 0.5);
   assert.equal(result.answerVal, 2);
 });
+
+test("getTodayDiagnosisItem: キャッシュ済みitemIdがallItemsに存在せず未回答なら再選出する", () => {
+  const store = createMockStore();
+  // i001をキャッシュした後、allItemsからi001が無くなった状態を再現
+  getTodayDiagnosisItem(store, "20260826", items, () => 0.5); // caches i001
+  const reducedItems = items.filter((i) => i.id !== "i001"); // i010, i002
+  const result = getTodayDiagnosisItem(store, "20260826", reducedItems, () => 0.9); // index -> i002
+  assert.equal(result.item.id, "i002");
+  assert.equal(result.answerVal, null);
+});
+
+test("getTodayDiagnosisItem: キャッシュ済みitemIdがallItemsに存在せず回答済みならitem:nullを返す", () => {
+  const store = createMockStore();
+  getTodayDiagnosisItem(store, "20260826", items, () => 0.5); // caches i001
+  answerDiagnosis(store, "20260826", 2);
+  const reducedItems = items.filter((i) => i.id !== "i001");
+  const result = getTodayDiagnosisItem(store, "20260826", reducedItems, () => 0.9);
+  assert.equal(result.item, null);
+  assert.equal(result.answerVal, 2);
+});

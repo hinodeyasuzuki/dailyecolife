@@ -1,4 +1,5 @@
 import { loadJSON, saveJSON } from "./storage.js";
+import { isActionRecordedInMonth, setActionRecorded } from "./records.js";
 
 export const METERREADING_KEY = "dailyecolife_meterreading";
 
@@ -20,4 +21,11 @@ export function saveMonthReading(store, monthKey, values, energyCodes, energyCos
   const hasEnergy = energyCodes.some((code) => typeof merged[code] === "number");
   const hasCost = energyCostCodes.some((code) => typeof merged[code] === "number");
   return { completed: hasEnergy && hasCost };
+}
+
+export function awardMeterReadingPoint(store, monthKey, dateKey, recordIndex, completed) {
+  if (!completed) return false;
+  if (isActionRecordedInMonth(store, monthKey, recordIndex)) return false;
+  setActionRecorded(store, dateKey, recordIndex);
+  return true;
 }

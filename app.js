@@ -1,14 +1,15 @@
 import { ACTIONS } from "./data/actions.js";
 import {
-  getDayRecord,
+  RECORDS_KEY,
+  RECORD_LENGTH,
   isActionRecorded,
   setActionRecorded,
   isActionRecordedInMonth,
-  countPointsForRange,
 } from "./js/records.js";
+import { loadJSON } from "./js/storage.js";
 import { getTodayQuiz, answerQuiz } from "./js/quiz.js";
 import { getTodayDiagnosisItem, answerDiagnosis } from "./js/ecodiagnosis.js";
-import { getMonthReading, saveMonthReading } from "./js/meterreading.js";
+import { getMonthReading, saveMonthReading, awardMeterReadingPoint } from "./js/meterreading.js";
 import { fetchInputItems, fetchEnergyCodes, fetchEnergyCostCodes } from "./js/api.js";
 
 const { createApp, ref, reactive, computed } = Vue;
@@ -36,6 +37,8 @@ function dateKeyDaysAgo(days) {
 
 const categories = [...new Set(ACTIONS.map((a) => a.category))];
 
+const EMPTY_RECORD = "0".repeat(RECORD_LENGTH);
+
 const app = createApp({
   setup() {
     const store = window.localStorage;
@@ -43,6 +46,8 @@ const app = createApp({
     const monthKey = todayMonthKey();
     const currentTab = ref("top");
     const openActionId = ref(null);
+    const loadError = ref(null);
+    const pendingRetry = ref(null);
 
     const quiz = ref(null);
     const diagnosisItem = ref(null);
@@ -51,15 +56,44 @@ const app = createApp({
     const energyCostCodes = ref([]);
     const meterValues = reactive({});
 
-    const totalPoints = computed(() =>
-      countPointsForRange(store, dateKeyDaysAgo(60), todayKey)
-    );
+    // localStorageの記録データをVueのreactiveな依存として保持する。
+    // 書き込み系の関数は必ずwriteRecord経由でこのrefを再代入し、
+    // isDone/totalPoints/historyDaysがそこから再計算されるようにする。
+    const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
+
+    // js/records.jsの関数(isActionRecorded等)をrecordsData.valueに対して
+    // そのまま使い回すための疑似store。
+    function recordsStore() {
+      return {
+        getItem: (key) => (key === RECORDS_KEY ? JSON.stringify(recordsData.value) : store.getItem(key)),
+      };
+    }
+
+    function refreshRecordsData() {
+      recordsData.value = loadJSON(store, RECORDS_KEY, {});
+    }
+
+    function writeRecord(dateKey, recordIndex) {
+      setActionRecorded(store, dateKey, recordIndex);
+      refreshRecordsData();
+    }
+
+    const totalPoints = computed(() => {
+      const startKey = dateKeyDaysAgo(60);
+      let total = 0;
+      for (const [dateKey, record] of Object.entries(recordsData.value)) {
+        if (dateKey >= startKey && dateKey <= todayKey) {
+          total += record.split("").filter((c) => c === "1").length;
+        }
+      }
+      return total;
+    });
 
     const historyDays = computed(() => {
       const days = [];
       for (let i = 59; i >= 0; i--) {
         const key = dateKeyDaysAgo(i);
-        const record = getDayRecord(store, key);
+        const record = recordsData.value[key] ?? EMPTY_RECORD;
         const points = record.split("").filter((c) => c === "1").length;
         days.push({ key, points, hasPoint: points > 0 });
       }
@@ -68,9 +102,9 @@ const app = createApp({
 
     function isDone(action) {
       if (action.type === "meter-reading") {
-        return isActionRecordedInMonth(store, monthKey, action.recordIndex);
+        return isActionRecordedInMonth(recordsStore(), monthKey, action.recordIndex);
       }
-      return isActionRecorded(store, todayKey, action.recordIndex);
+      return isActionRecorded(recordsStore(), todayKey, action.recordIndex);
     }
 
     function actionsByCategory(category) {
@@ -79,47 +113,72 @@ const app = createApp({
 
     function markSimpleDone(action) {
       if (isDone(action)) return;
-      setActionRecorded(store, todayKey, action.recordIndex);
+      writeRecord(todayKey, action.recordIndex);
     }
 
     function markExternalDone(action) {
       if (isDone(action)) return;
-      setActionRecorded(store, todayKey, action.recordIndex);
+      writeRecord(todayKey, action.recordIndex);
     }
 
     async function openQuiz(action) {
       openActionId.value = action.id;
-      quiz.value = await getTodayQuiz(store, todayKey, (url) => fetch(url));
+      loadError.value = null;
+      pendingRetry.value = null;
+      try {
+        quiz.value = await getTodayQuiz(store, todayKey, (url) => fetch(url));
+      } catch (err) {
+        quiz.value = null;
+        loadError.value = "クイズを取得できませんでした。";
+        pendingRetry.value = () => openQuiz(action);
+      }
     }
 
     function submitQuizAnswer(action, optionIndex) {
       const result = answerQuiz(store, todayKey, optionIndex);
       quiz.value = { ...quiz.value, answeredOption: optionIndex, correct: result.correct };
-      setActionRecorded(store, todayKey, action.recordIndex);
+      writeRecord(todayKey, action.recordIndex);
     }
 
     async function openEcoDiagnosis(action) {
       openActionId.value = action.id;
-      if (inputItems.value.length === 0) {
-        inputItems.value = await fetchInputItems((url) => fetch(url));
+      loadError.value = null;
+      pendingRetry.value = null;
+      try {
+        if (inputItems.value.length === 0) {
+          inputItems.value = await fetchInputItems((url) => fetch(url));
+        }
+        diagnosisItem.value = getTodayDiagnosisItem(store, todayKey, inputItems.value);
+      } catch (err) {
+        diagnosisItem.value = null;
+        loadError.value = "エコ診断を取得できませんでした。";
+        pendingRetry.value = () => openEcoDiagnosis(action);
       }
-      diagnosisItem.value = getTodayDiagnosisItem(store, todayKey, inputItems.value);
     }
 
     function submitDiagnosisAnswer(action, val) {
       answerDiagnosis(store, todayKey, val);
       diagnosisItem.value = { ...diagnosisItem.value, answerVal: val };
-      setActionRecorded(store, todayKey, action.recordIndex);
+      writeRecord(todayKey, action.recordIndex);
     }
 
     async function openMeterReading(action) {
       openActionId.value = action.id;
-      if (energyCodes.value.length === 0) {
-        energyCodes.value = await fetchEnergyCodes((url) => fetch(url));
-        energyCostCodes.value = await fetchEnergyCostCodes((url) => fetch(url));
+      loadError.value = null;
+      pendingRetry.value = null;
+      try {
+        if (energyCodes.value.length === 0) {
+          energyCodes.value = await fetchEnergyCodes((url) => fetch(url));
+          energyCostCodes.value = await fetchEnergyCostCodes((url) => fetch(url));
+        }
+        const existing = getMonthReading(store, monthKey);
+        Object.assign(meterValues, existing);
+      } catch (err) {
+        energyCodes.value = [];
+        energyCostCodes.value = [];
+        loadError.value = "検針票の項目を取得できませんでした。";
+        pendingRetry.value = () => openMeterReading(action);
       }
-      const existing = getMonthReading(store, monthKey);
-      Object.assign(meterValues, existing);
     }
 
     function submitMeterReading(action) {
@@ -137,13 +196,16 @@ const app = createApp({
         energyCodes.value.map((c) => c.code),
         energyCostCodes.value.map((c) => c.code)
       );
-      if (result.completed && !isActionRecordedInMonth(store, monthKey, action.recordIndex)) {
-        setActionRecorded(store, todayKey, action.recordIndex);
+      const awarded = awardMeterReadingPoint(store, monthKey, todayKey, action.recordIndex, result.completed);
+      if (awarded) {
+        refreshRecordsData();
       }
     }
 
     function closeActionDetail() {
       openActionId.value = null;
+      loadError.value = null;
+      pendingRetry.value = null;
     }
 
     return {
@@ -152,6 +214,8 @@ const app = createApp({
       actionsByCategory,
       isDone,
       openActionId,
+      loadError,
+      pendingRetry,
       quiz,
       diagnosisItem,
       inputItems,
@@ -196,16 +260,22 @@ const app = createApp({
 
               <template v-if="action.type === 'quiz'">
                 <button v-if="openActionId !== action.id" class="btn" @click="openQuiz(action)">クイズを見る</button>
-                <div v-else-if="quiz">
-                  <p>{{ quiz.question.question }}</p>
-                  <div v-for="n in [1,2,3,4]" :key="n">
-                    <button class="btn" :disabled="quiz.answeredOption !== null" @click="submitQuizAnswer(action, n)">
-                      {{ quiz.question['option' + n] }}
-                    </button>
+                <div v-else>
+                  <div v-if="loadError" class="load-error">
+                    <p>{{ loadError }}</p>
+                    <button class="btn" @click="pendingRetry()">再試行</button>
                   </div>
-                  <p v-if="quiz.answeredOption !== null">
-                    {{ quiz.correct ? '正解！' : '不正解' }} - {{ quiz.question.explanation }}
-                  </p>
+                  <template v-else-if="quiz">
+                    <p>{{ quiz.question.question }}</p>
+                    <div v-for="n in [1,2,3,4]" :key="n">
+                      <button class="btn" :disabled="quiz.answeredOption !== null" @click="submitQuizAnswer(action, n)">
+                        {{ quiz.question['option' + n] }}
+                      </button>
+                    </div>
+                    <p v-if="quiz.answeredOption !== null">
+                      {{ quiz.correct ? '正解！' : '不正解' }} - {{ quiz.question.explanation }}
+                    </p>
+                  </template>
                   <button class="btn" @click="closeActionDetail">閉じる</button>
                 </div>
               </template>
@@ -217,14 +287,20 @@ const app = createApp({
 
               <template v-if="action.type === 'eco-diagnosis'">
                 <button v-if="openActionId !== action.id" class="btn" @click="openEcoDiagnosis(action)">エコ診断を開く</button>
-                <div v-else-if="diagnosisItem">
-                  <p>{{ diagnosisItem.item.title }}</p>
-                  <p>{{ diagnosisItem.item.text }}</p>
-                  <div v-for="opt in diagnosisItem.item.options" :key="opt.val">
-                    <button class="btn" :disabled="diagnosisItem.answerVal !== null" @click="submitDiagnosisAnswer(action, opt.val)">
-                      {{ opt.disp }}
-                    </button>
+                <div v-else>
+                  <div v-if="loadError" class="load-error">
+                    <p>{{ loadError }}</p>
+                    <button class="btn" @click="pendingRetry()">再試行</button>
                   </div>
+                  <template v-else-if="diagnosisItem && diagnosisItem.item">
+                    <p>{{ diagnosisItem.item.title }}</p>
+                    <p>{{ diagnosisItem.item.text }}</p>
+                    <div v-for="opt in diagnosisItem.item.options" :key="opt.val">
+                      <button class="btn" :disabled="diagnosisItem.answerVal !== null" @click="submitDiagnosisAnswer(action, opt.val)">
+                        {{ opt.disp }}
+                      </button>
+                    </div>
+                  </template>
                   <button class="btn" @click="closeActionDetail">閉じる</button>
                 </div>
               </template>
@@ -232,15 +308,21 @@ const app = createApp({
               <template v-if="action.type === 'meter-reading'">
                 <button v-if="openActionId !== action.id" class="btn" @click="openMeterReading(action)">検針票を記録する</button>
                 <div v-else>
-                  <div class="form-field" v-for="c in energyCodes" :key="c.code">
-                    <label>{{ c.name }}({{ c.unit }})</label>
-                    <input type="number" v-model="meterValues[c.code]">
+                  <div v-if="loadError" class="load-error">
+                    <p>{{ loadError }}</p>
+                    <button class="btn" @click="pendingRetry()">再試行</button>
                   </div>
-                  <div class="form-field" v-for="c in energyCostCodes" :key="c.code">
-                    <label>{{ c.name }}</label>
-                    <input type="number" v-model="meterValues[c.code]">
-                  </div>
-                  <button class="btn btn-primary" @click="submitMeterReading(action)">保存</button>
+                  <template v-else>
+                    <div class="form-field" v-for="c in energyCodes" :key="c.code">
+                      <label>{{ c.name }}({{ c.unit }})</label>
+                      <input type="number" v-model="meterValues[c.code]">
+                    </div>
+                    <div class="form-field" v-for="c in energyCostCodes" :key="c.code">
+                      <label>{{ c.name }}</label>
+                      <input type="number" v-model="meterValues[c.code]">
+                    </div>
+                    <button class="btn btn-primary" @click="submitMeterReading(action)">保存</button>
+                  </template>
                   <button class="btn" @click="closeActionDetail">閉じる</button>
                 </div>
               </template>

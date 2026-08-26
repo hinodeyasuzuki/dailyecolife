@@ -136,3 +136,12 @@ body {
   background: var(--done);
   color: #fff;
 }
+
+.load-error {
+  color: #b3261e;
+  margin-bottom: 8px;
+}
+
+.load-error p {
+  margin: 0 0 8px;
+}

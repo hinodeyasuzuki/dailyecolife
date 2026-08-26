@@ -13,6 +13,9 @@ export async function getTodayQuiz(store, dateKey, fetchFn) {
     return all[dateKey];
   }
   const response = await fetchFn(QUIZ_API_URL);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
   const question = await response.json();
   const entry = { question, answeredOption: null, correct: null };
   all[dateKey] = entry;

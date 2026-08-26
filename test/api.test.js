@@ -10,7 +10,11 @@ import {
 } from "../js/api.js";
 
 function makeFetchFn(map) {
-  return async (url) => ({ json: async () => map[url] });
+  return async (url) => ({ ok: true, json: async () => map[url] });
+}
+
+function makeFailingFetchFn(status) {
+  return async () => ({ ok: false, status, json: async () => ({}) });
 }
 
 test("fetchInputItems: INPUT_JSON_URLをfetchしパースして返す", async () => {
@@ -29,4 +33,9 @@ test("fetchEnergyCostCodes: ENERGYCOST_JSON_URLをfetchしパースして返す"
   const fetchFn = makeFetchFn({ [ENERGYCOST_JSON_URL]: [{ code: "electp", name: "購入電力料金" }] });
   const result = await fetchEnergyCostCodes(fetchFn);
   assert.deepEqual(result, [{ code: "electp", name: "購入電力料金" }]);
+});
+
+test("fetchInputItems: response.okがfalseの場合はエラーがthrowされる", async () => {
+  const fetchFn = makeFailingFetchFn(404);
+  await assert.rejects(() => fetchInputItems(fetchFn), /HTTP 404/);
 });
