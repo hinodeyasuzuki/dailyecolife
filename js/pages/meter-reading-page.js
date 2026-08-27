@@ -6,9 +6,26 @@ import { fetchEnergyCodes, fetchEnergyCostCodes } from "../api.js";
 import { todayDateKey, todayMonthKey } from "../date.js";
 import { actionDescription } from "../action-meta.js";
 
-const { ref, reactive, watch, onMounted } = Vue;
+const { ref, reactive, computed, watch, onMounted } = Vue;
 
 const meterAction = ACTIONS.find((a) => a.type === "meter-reading");
+const METER_PAIRS = [
+  { energyCode: "elect", costCode: "electp" },
+  { energyCode: "nagas", costCode: "nagasp" },
+  { energyCode: "lpgas", costCode: "lpgasp" },
+  { energyCode: "keros", costCode: "kerosp" },
+  { energyCode: "gasol", costCode: "gasolp" },
+  { energyCode: "water", costCode: "waterp" },
+];
+
+function previousMonthKey(monthKey) {
+  const date = new Date(Number(monthKey.slice(0, 4)), Number(monthKey.slice(4, 6)) - 2, 1);
+  return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthLabel(monthKey) {
+  return `${monthKey.slice(0, 4)}年${Number(monthKey.slice(4, 6))}月`;
+}
 
 export const MeterReadingPage = {
   emits: ["updated"],
@@ -22,12 +39,24 @@ export const MeterReadingPage = {
     const store = window.localStorage;
     const todayKey = todayDateKey();
     const monthKey = todayMonthKey();
+    const previousKey = previousMonthKey(monthKey);
 
     const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
     const energyCodes = ref([]);
     const energyCostCodes = ref([]);
     const meterValues = reactive({});
     const loadError = ref(null);
+    const selectedMonthKey = ref(monthKey);
+    const monthOptions = [
+      { key: monthKey, label: `今月（${monthLabel(monthKey)}）` },
+      { key: previousKey, label: `前月（${monthLabel(previousKey)}）` },
+    ];
+    const meterPairs = computed(() =>
+      METER_PAIRS.map(({ energyCode, costCode }) => ({
+        energy: energyCodes.value.find((code) => code.code === energyCode),
+        cost: energyCostCodes.value.find((code) => code.code === costCode),
+      })).filter((pair) => pair.energy && pair.cost)
+    );
 
     function recordsStore() {
       return {
@@ -41,7 +70,15 @@ export const MeterReadingPage = {
 
     function isDone() {
       if (!meterAction) return false;
-      return isActionRecordedInMonth(recordsStore(), monthKey, meterAction.recordIndex);
+      return isActionRecordedInMonth(recordsStore(), selectedMonthKey.value, meterAction.recordIndex);
+    }
+
+    function loadMonthReading() {
+      const existing = getMonthReading(store, selectedMonthKey.value);
+      for (const code of Object.keys(meterValues)) {
+        delete meterValues[code];
+      }
+      Object.assign(meterValues, existing);
     }
 
     async function loadForm() {
@@ -51,8 +88,7 @@ export const MeterReadingPage = {
           energyCodes.value = await fetchEnergyCodes((url) => fetch(url));
           energyCostCodes.value = await fetchEnergyCostCodes((url) => fetch(url));
         }
-        const existing = getMonthReading(store, monthKey);
-        Object.assign(meterValues, existing);
+        loadMonthReading();
       } catch (err) {
         energyCodes.value = [];
         energyCostCodes.value = [];
@@ -62,7 +98,7 @@ export const MeterReadingPage = {
 
     function saveReading() {
       if (!meterAction) return;
-      const codes = [...energyCodes.value.map((c) => c.code), ...energyCostCodes.value.map((c) => c.code)];
+      const codes = meterPairs.value.flatMap((pair) => [pair.energy.code, pair.cost.code]);
       const values = {};
       for (const code of codes) {
         if (meterValues[code] !== undefined && meterValues[code] !== "") {
@@ -72,12 +108,13 @@ export const MeterReadingPage = {
 
       const result = saveMonthReading(
         store,
-        monthKey,
+        selectedMonthKey.value,
         values,
-        energyCodes.value.map((c) => c.code),
-        energyCostCodes.value.map((c) => c.code)
+        METER_PAIRS.map((pair) => pair.energyCode),
+        METER_PAIRS.map((pair) => pair.costCode)
       );
-      const awarded = awardMeterReadingPoint(store, monthKey, todayKey, meterAction.recordIndex, result.completed);
+      const recordDateKey = selectedMonthKey.value === monthKey ? todayKey : `${selectedMonthKey.value}01`;
+      const awarded = awardMeterReadingPoint(store, selectedMonthKey.value, recordDateKey, meterAction.recordIndex, result.completed);
       if (awarded) {
         refreshRecords();
         emit("updated");
@@ -91,6 +128,10 @@ export const MeterReadingPage = {
       }
     );
 
+    watch(selectedMonthKey, () => {
+      loadMonthReading();
+    });
+
     onMounted(() => {
       loadForm();
     });
@@ -101,6 +142,9 @@ export const MeterReadingPage = {
       energyCostCodes,
       meterValues,
       loadError,
+      selectedMonthKey,
+      monthOptions,
+      meterPairs,
       isDone,
       saveReading,
       loadForm,
@@ -113,7 +157,7 @@ export const MeterReadingPage = {
         <h2>{{ meterAction.label }}</h2>
         <p class="detail-description">{{ actionDescription(meterAction) }}</p>
         <p class="detail-achievement" :class="{done: isDone()}">
-          {{ isDone() ? 'このアクションは達成済みです。' : 'まだ達成していません。' }}
+          {{ isDone() ? 'この月の検針票記録は達成済みです。' : '使用量と料金をセットで入力してください。' }}
         </p>
 
         <div class="detail-body">
@@ -122,13 +166,29 @@ export const MeterReadingPage = {
             <button class="btn" @click="loadForm">再試行</button>
           </div>
           <template v-else>
-            <div class="form-field" v-for="c in energyCodes" :key="c.code">
-              <label>{{ c.name }}({{ c.unit }})</label>
-              <input type="number" v-model="meterValues[c.code]">
+            <div class="month-selector" role="group" aria-label="記録する月">
+              <button
+                v-for="month in monthOptions"
+                :key="month.key"
+                type="button"
+                class="btn month-selector-button"
+                :class="{ selected: selectedMonthKey === month.key }"
+                @click="selectedMonthKey = month.key">
+                {{ month.label }}
+              </button>
             </div>
-            <div class="form-field" v-for="c in energyCostCodes" :key="c.code">
-              <label>{{ c.name }}</label>
-              <input type="number" v-model="meterValues[c.code]">
+            <div v-for="pair in meterPairs" :key="pair.energy.code" class="meter-pair">
+              <p class="meter-pair-title">{{ pair.energy.name }}</p>
+              <div class="meter-pair-fields">
+                <div class="form-field">
+                  <label>{{ pair.energy.name }}（{{ pair.energy.unit }}）</label>
+                  <input type="number" min="0" step="any" v-model="meterValues[pair.energy.code]">
+                </div>
+                <div class="form-field">
+                  <label>{{ pair.cost.name }}（円）</label>
+                  <input type="number" min="0" step="1" v-model="meterValues[pair.cost.code]">
+                </div>
+              </div>
             </div>
             <button class="btn btn-primary" @click="saveReading">保存</button>
           </template>

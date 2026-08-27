@@ -33,7 +33,7 @@ export function getTodayDiagnosisItem(store, dateKey, allItems, randomFn = Math.
 export function answerDiagnosis(store, dateKey, answerVal) {
   const all = loadAll(store);
   const entry = all[dateKey];
-  if (!entry || entry.answerVal !== null) return;
+  if (!entry) return;
   entry.answerVal = answerVal;
   saveJSON(store, ECODIAGNOSIS_KEY, all);
 }

@@ -38,13 +38,13 @@ test("answerDiagnosis: 回答値を保存する", () => {
   assert.equal(result.answerVal, 2);
 });
 
-test("answerDiagnosis: 回答済みなら上書きしない", () => {
+test("answerDiagnosis: 回答済みでも値を変更できる", () => {
   const store = createMockStore();
   getTodayDiagnosisItem(store, "20260826", items, () => 0.5);
   answerDiagnosis(store, "20260826", 2);
   answerDiagnosis(store, "20260826", 3);
   const result = getTodayDiagnosisItem(store, "20260826", items, () => 0.5);
-  assert.equal(result.answerVal, 2);
+  assert.equal(result.answerVal, 3);
 });
 
 test("getTodayDiagnosisItem: キャッシュ済みitemIdがallItemsに存在せず未回答なら再選出する", () => {

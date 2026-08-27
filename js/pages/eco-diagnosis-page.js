@@ -59,7 +59,9 @@ export const EcoDiagnosisPage = {
       if (!diagnosisAction || !diagnosisItem.value) return;
       answerDiagnosis(store, todayKey, val);
       diagnosisItem.value = { ...diagnosisItem.value, answerVal: val };
-      setActionRecorded(store, todayKey, diagnosisAction.recordIndex);
+      if (!isDone()) {
+        setActionRecorded(store, todayKey, diagnosisAction.recordIndex);
+      }
       refreshRecords();
       emit("updated");
     }
@@ -91,7 +93,7 @@ export const EcoDiagnosisPage = {
         <h2>{{ diagnosisAction.label }}</h2>
         <p class="detail-description">{{ actionDescription(diagnosisAction) }}</p>
         <p class="detail-achievement" :class="{done: isDone()}">
-          {{ isDone() ? 'このアクションは達成済みです。' : 'まだ達成していません。' }}
+          {{ isDone() ? '本日記入済みです。' : '記入してください。' }}
         </p>
 
         <div class="detail-body">
@@ -103,7 +105,7 @@ export const EcoDiagnosisPage = {
             <p class="detail-question">{{ diagnosisItem.item.title }}</p>
             <p>{{ diagnosisItem.item.text }}</p>
             <div v-for="opt in diagnosisItem.item.options" :key="opt.val">
-              <button class="btn option-btn" :disabled="diagnosisItem.answerVal !== null" @click="submitAnswer(opt.val)">
+              <button class="btn option-btn" :class="{ selected: diagnosisItem.answerVal === opt.val }" @click="submitAnswer(opt.val)">
                 {{ opt.disp }}
               </button>
             </div>

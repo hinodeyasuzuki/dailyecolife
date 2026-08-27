@@ -1,7 +1,8 @@
 import { loadJSON, saveJSON } from "./storage.js";
 
 export const QUIZ_KEY = "dailyecolife_quiz";
-export const QUIZ_API_URL = "https://s8.hinodeya-ecolife.com/quizapi/";
+//export const QUIZ_API_URL = "https://s8.hinodeya-ecolife.com/quizapi/";
+export const QUIZ_API_URL = "http://localhost/dev/quizapi/";
 
 function loadAllQuiz(store) {
   return loadJSON(store, QUIZ_KEY, {});

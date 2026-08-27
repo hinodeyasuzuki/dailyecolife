@@ -11,8 +11,8 @@ function createMockStore(initial = {}) {
   };
 }
 
-const energyCodes = ["elect", "nagas", "water"];
-const energyCostCodes = ["electp", "nagasp"];
+const energyCodes = ["elect", "nagas", "lpgas", "keros", "gasol", "water"];
+const energyCostCodes = ["electp", "nagasp", "lpgasp", "kerosp", "gasolp", "waterp"];
 
 test("getMonthReading: 未設定月は空オブジェクト", () => {
   const store = createMockStore();
@@ -31,6 +31,18 @@ test("saveMonthReading: 消費量・料金が両方揃うとcompleted=true", () 
   const result = saveMonthReading(store, "202608", { electp: 3500 }, energyCodes, energyCostCodes);
   assert.equal(result.completed, true);
   assert.deepEqual(getMonthReading(store, "202608"), { elect: 120, electp: 3500 });
+});
+
+test("saveMonthReading: 異なる系統の消費量と料金ではcompleted=false", () => {
+  const store = createMockStore();
+  const result = saveMonthReading(store, "202608", { elect: 120, nagasp: 3500 }, energyCodes, energyCostCodes);
+  assert.equal(result.completed, false);
+});
+
+test("saveMonthReading: 水道の消費量と料金が揃うとcompleted=true", () => {
+  const store = createMockStore();
+  const result = saveMonthReading(store, "202608", { water: 12, waterp: 2800 }, energyCodes, energyCostCodes);
+  assert.equal(result.completed, true);
 });
 
 test("saveMonthReadingは既存値を上書きせずマージする", () => {

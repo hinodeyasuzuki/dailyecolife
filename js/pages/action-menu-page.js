@@ -1,6 +1,7 @@
 import { ACTIONS } from "../../data/actions.js";
 import { RECORDS_KEY, isActionRecorded, setActionRecorded } from "../records.js";
 import { loadJSON } from "../storage.js";
+import { externalActionCount } from "../external-records.js";
 import { todayDateKey } from "../date.js";
 import { actionDescription } from "../action-meta.js";
 
@@ -22,6 +23,11 @@ export const ActionMenuPage = {
     const store = window.localStorage;
     const todayKey = todayDateKey();
     const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
+    const externalCountsAtOpen = {
+      repair: externalActionCount(store, "repair"),
+      secondhand: externalActionCount(store, "secondhand"),
+    };
+    const externalMessage = ref("");
 
     const selectedActionId = computed(() => props.pageParams.actionId ?? null);
     const selectedAction = computed(() => {
@@ -61,9 +67,19 @@ export const ActionMenuPage = {
       emit("updated");
     }
 
+    function markExternalDone(action) {
+      if (isDone(action)) return;
+      if (externalActionCount(store, action.id) <= externalCountsAtOpen[action.id]) {
+        externalMessage.value = "外部記録に新しい記入が見つかりません。記入後にもう一度確認してください。";
+        return;
+      }
+      externalMessage.value = "";
+      markDone(action);
+    }
+
     function openExternalLabel(action) {
-      if (action.id === "secondhand") return "中古品購入ページを開く";
-      if (action.id === "repair") return "修理修繕ページを開く";
+      if (action.id === "secondhand") return "中古品ページを開く";
+      if (action.id === "repair") return "修理履歴ページを開く";
       return "外部ページを開く";
     }
 
@@ -82,6 +98,8 @@ export const ActionMenuPage = {
       pageActions,
       isDone,
       markDone,
+      markExternalDone,
+      externalMessage,
       openExternalLabel,
       actionDescription,
     };
@@ -93,16 +111,17 @@ export const ActionMenuPage = {
           <h2>{{ action.label }}</h2>
           <p class="detail-description">{{ actionDescription(action) }}</p>
           <p class="detail-achievement" :class="{done: isDone(action)}">
-            {{ isDone(action) ? 'このアクションは達成済みです。' : 'まだ達成していません。' }}
+            {{ isDone(action) ? '本日達成できました。' : 'まだ達成できていません。' }}
           </p>
 
           <div class="detail-body" v-if="isExternalMode">
             <a :href="action.url" target="_blank" rel="noopener" class="btn">{{ openExternalLabel(action) }}</a>
-            <button v-if="!isDone(action)" class="btn btn-primary" @click="markDone(action)">今日記入した</button>
+            <button v-if="!isDone(action)" class="btn btn-primary" @click="markExternalDone(action)">今日記入した</button>
+            <p v-if="externalMessage && !isDone(action)" class="external-action-message">{{ externalMessage }}</p>
           </div>
 
           <div class="detail-body" v-else>
-            <button v-if="!isDone(action)" class="btn btn-primary" @click="markDone(action)">できた</button>
+            <button v-if="!isDone(action)" class="btn btn-primary" @click="markDone(action)">本日（前回の記入以降）できた</button>
           </div>
         </article>
       </div>

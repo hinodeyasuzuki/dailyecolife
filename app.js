@@ -1,5 +1,5 @@
 import { ACTIONS } from "./data/actions.js";
-import { RECORDS_KEY, isActionRecorded, isActionRecordedInMonth } from "./js/records.js";
+import { RECORDS_KEY, countPointsForDay, isActionRecorded, isActionRecordedInMonth } from "./js/records.js";
 import { loadJSON } from "./js/storage.js";
 import { dateKeyDaysAgo, todayDateKey, todayMonthKey } from "./js/date.js";
 import { HistoryPage } from "./js/pages/history-page.js";
@@ -22,26 +22,7 @@ const actionById = Object.fromEntries(ACTIONS.map((a) => [a.id, a]));
 
 const MENU_ITEMS = [
   { key: "quiz", title: "環境クイズ", actionId: "quiz" },
-  { key: "diagnosis", title: "エコ診断", actionId: "ecocheck" },
-  { key: "meter", title: "検針票記録", actionId: "meterread" },
-  {
-    key: "actionMenu",
-    title: "中古品購入",
-    actionId: "secondhand",
-    params: { actionId: "secondhand", title: "中古品購入" },
-  },
-  {
-    key: "actionMenu",
-    title: "修理修繕・リペア",
-    actionId: "repair",
-    params: { actionId: "repair", title: "修理修繕・リペア" },
-  },
-  {
-    key: "actionMenu",
-    title: "包装少ない購入",
-    actionId: "packaging",
-    params: { actionId: "packaging", title: "包装少ない購入" },
-  },
+  { key: "diagnosis", title: "今日のエコ診断", actionId: "ecocheck" },
   {
     key: "actionMenu",
     title: "食品ロスゼロ",
@@ -56,15 +37,33 @@ const MENU_ITEMS = [
   },
   {
     key: "actionMenu",
+    title: "包装が少ない購入",
+    actionId: "packaging",
+    params: { actionId: "packaging", title: "包装が少ない購入" },
+  },
+  {
+    key: "actionMenu",
     title: "省エネの工夫",
     actionId: "energysave",
     params: { actionId: "energysave", title: "省エネの工夫" },
   },
   {
     key: "actionMenu",
-    title: "車の使用を減らした",
+    title: "車の使用を削減",
     actionId: "lesscar",
-    params: { actionId: "lesscar", title: "車の使用を減らした" },
+    params: { actionId: "lesscar", title: "車の使用を削減" },
+  },
+  {
+    key: "actionMenu",
+    title: "中古品購入",
+    actionId: "secondhand",
+    params: { actionId: "secondhand", title: "中古品購入" },
+  },
+  {
+    key: "actionMenu",
+    title: "修理修繕・リペア",
+    actionId: "repair",
+    params: { actionId: "repair", title: "修理修繕・リペア" },
   },
   {
     key: "actionMenu",
@@ -74,10 +73,11 @@ const MENU_ITEMS = [
   },
   {
     key: "actionMenu",
-    title: "環境の話をした",
+    title: "環境コミュニケーション",
     actionId: "talk",
-    params: { actionId: "talk", title: "環境の話をした" },
+    params: { actionId: "talk", title: "環境コミュニケーション" },
   },
+  { key: "meter", title: "検針票記録", actionId: "meterread" },
 ];
 
 const PAGE_TITLES = {
@@ -86,6 +86,8 @@ const PAGE_TITLES = {
   diagnosis: "エコ診断",
   meter: "検針票記録",
 };
+
+const menuHistoryState = { dailyecolifePage: "menu", params: {} };
 
 const app = createApp({
   components: {
@@ -105,6 +107,8 @@ const app = createApp({
     const refreshTick = ref(0);
     const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
 
+    window.history.pushState(menuHistoryState, "", window.location.href);
+
     function refreshRecords() {
       recordsData.value = loadJSON(store, RECORDS_KEY, {});
     }
@@ -118,13 +122,27 @@ const app = createApp({
     function openPage(pageKey, params = {}) {
       currentPage.value = pageKey;
       currentPageParams.value = params;
+      window.history.pushState({ dailyecolifePage: pageKey, params }, "", window.location.href);
     }
 
     function backToMenu() {
-      refreshRecords();
-      currentPage.value = "menu";
-      currentPageParams.value = {};
+      window.history.back();
     }
+
+    window.addEventListener("popstate", (event) => {
+      const state = event.state;
+      if (state?.dailyecolifePage) {
+        currentPage.value = state.dailyecolifePage;
+        currentPageParams.value = state.params ?? {};
+        refreshRecords();
+        return;
+      }
+      if (window.confirm("毎日エコライフを終了しますか？（保存されています）")) {
+        window.history.back();
+        return;
+      }
+      window.history.pushState(menuHistoryState, "", window.location.href);
+    });
 
     function handleUpdated() {
       refreshTick.value += 1;
@@ -139,6 +157,12 @@ const app = createApp({
       }
       return isActionRecorded(recordsStore(), todayKey, action.recordIndex);
     }
+
+    function menuItemStatusText(item) {
+      return isMenuItemDone(item) ? "達成" : "未達成";
+    }
+
+    const todayPoints = computed(() => countPointsForDay(recordsStore(), todayKey));
 
     const totalPoints = computed(() => {
       const startKey = dateKeyDaysAgo(60);
@@ -169,18 +193,20 @@ const app = createApp({
       currentComponent,
       currentTitle,
       refreshTick,
+      todayPoints,
       totalPoints,
       openPage,
       backToMenu,
       handleUpdated,
       isMenuItemDone,
+      menuItemStatusText,
     };
   },
   template: `
     <div>
       <header class="app-header">
         <h1>毎日エコライフ</h1>
-        <div class="point-summary">直近2ヶ月のポイント: {{ totalPoints }}</div>
+        <div class="point-summary">今日のポイント: {{ todayPoints }} / 直近2ヶ月のポイント: {{ totalPoints }}</div>
       </header>
 
       <section v-if="currentPage === 'menu'" class="menu-grid">
@@ -194,19 +220,20 @@ const app = createApp({
           v-for="item in MENU_ITEMS"
           :key="item.title"
           type="button"
-          class="action-card action-card-button"
+          class="action-card action-card-button top-menu-card"
+          :class="{done: isMenuItemDone(item)}"
           @click="openPage(item.key, item.params || {})">
           <div class="action-card-title">
             <span>{{ item.title }}</span>
-            <span v-if="isMenuItemDone(item)">✅</span>
-            <span v-else>未完了</span>
+            <span class="status-badge" :class="isMenuItemDone(item) ? 'done' : 'pending'">
+              {{ menuItemStatusText(item) }}
+            </span>
           </div>
         </button>
       </section>
 
       <section v-else class="detail-screen">
-        <button class="btn btn-ghost" @click="backToMenu">メニューに戻る</button>
-        <h2 class="page-title">{{ currentTitle }}</h2>
+        <button class="btn btn-ghost" @click="backToMenu">< メニューに戻る</button>
         <component
           :is="currentComponent"
           :refresh-tick="refreshTick"

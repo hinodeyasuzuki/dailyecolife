@@ -18,9 +18,10 @@ export function saveMonthReading(store, monthKey, values, energyCodes, energyCos
   all[monthKey] = merged;
   saveJSON(store, METERREADING_KEY, all);
 
-  const hasEnergy = energyCodes.some((code) => typeof merged[code] === "number");
-  const hasCost = energyCostCodes.some((code) => typeof merged[code] === "number");
-  return { completed: hasEnergy && hasCost };
+  const completed = energyCodes.some(
+    (code) => energyCostCodes.includes(`${code}p`) && typeof merged[code] === "number" && typeof merged[`${code}p`] === "number"
+  );
+  return { completed };
 }
 
 export function awardMeterReadingPoint(store, monthKey, dateKey, recordIndex, completed) {

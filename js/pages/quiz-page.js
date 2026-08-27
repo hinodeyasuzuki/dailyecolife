@@ -81,12 +81,12 @@ export const QuizPage = {
     };
   },
   template: `
-    <section>
+    <section id="quiz-page">
       <article class="detail-panel" v-if="quizAction">
         <h2>{{ quizAction.label }}</h2>
-        <p class="detail-description">{{ actionDescription(quizAction) }}</p>
+        <p class="detail-description">今日の1問にチャレンジして、楽しくエコ知識をアップしよう。</p>
         <p class="detail-achievement" :class="{done: isDone()}">
-          {{ isDone() ? 'このアクションは達成済みです。' : 'まだ達成していません。' }}
+          {{ isDone() ? '本日の問題は回答済みです。' : '本日の問題です。気軽に1つ選んでください。' }}
         </p>
 
         <div class="detail-body">
@@ -97,7 +97,7 @@ export const QuizPage = {
           <template v-else-if="quiz">
             <p class="detail-question">{{ quiz.question.question }}</p>
             <div v-for="n in [1,2,3,4]" :key="n">
-              <button class="btn option-btn" :disabled="quiz.answeredOption !== null" @click="submitAnswer(n)">
+              <button class="btn option-btn" :class="{ selected: quiz.answeredOption === n }" :disabled="quiz.answeredOption !== null" @click="submitAnswer(n)">
                 {{ quiz.question['option' + n] }}
               </button>
             </div>
