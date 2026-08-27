@@ -49,6 +49,12 @@ const MENU_ITEMS = [
   },
   {
     key: "actionMenu",
+    title: "今日の省エネのヒント",
+    actionId: "energyhint",
+    params: { actionId: "energyhint", title: "省エネのヒント" },
+  },
+  {
+    key: "actionMenu",
     title: "車の使用を削減",
     actionId: "lesscar",
     params: { actionId: "lesscar", title: "車の使用を削減" },
@@ -64,6 +70,12 @@ const MENU_ITEMS = [
     title: "修理修繕・リペア",
     actionId: "repair",
     params: { actionId: "repair", title: "修理修繕・リペア" },
+  },
+  {
+    key: "actionMenu",
+    title: "今日の修理のヒント",
+    actionId: "repairhint",
+    params: { actionId: "repairhint", title: "修理のヒント" },
   },
   {
     key: "actionMenu",
@@ -287,6 +299,7 @@ const app = createApp({
           <h2 id="about-title">このアプリについて</h2>
           <p>毎日エコライフは、日常でできる環境配慮行動を記録し、継続を振り返るためのアプリです。</p>
           <p>クイズ、エコ診断、検針票記録などを通して、暮らしの中の環境との関わりを見つめます。</p>
+          <p><a href="https://www.hinodeya-ecolife.com/" target="_blank" rel="noopener noreferrer">有限会社ひのでやエコライフ研究所</a>が提供しています。</p>
           <button type="button" class="btn" @click="showAbout = false">閉じる</button>
         </section>
       </div>

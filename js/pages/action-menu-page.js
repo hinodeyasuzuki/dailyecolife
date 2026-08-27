@@ -28,6 +28,7 @@ export const ActionMenuPage = {
       secondhand: externalActionCount(store, "secondhand"),
     };
     const externalMessage = ref("");
+    const viewedInfo = ref(false);
 
     const selectedActionId = computed(() => props.pageParams.actionId ?? null);
     const selectedAction = computed(() => {
@@ -39,6 +40,7 @@ export const ActionMenuPage = {
       if (selectedAction.value) return selectedAction.value.type === "external";
       return selectedMode.value === "external";
     });
+    const isInfoMode = computed(() => selectedAction.value?.type === "info");
     const pageActions = computed(() => {
       if (selectedAction.value) return [selectedAction.value];
       if (selectedActionId.value) return [];
@@ -77,6 +79,21 @@ export const ActionMenuPage = {
       markDone(action);
     }
 
+    function openInfo(action) {
+      const url = new URL(action.url);
+      url.searchParams.set("ymd", todayKey);
+      viewedInfo.value = true;
+      window.open(url.toString(), "_blank", "noopener");
+    }
+
+    function infoOpenLabel(action) {
+      return `${action.label}を表示`;
+    }
+
+    function infoReadLabel(action) {
+      return `${action.label}を読んだ`;
+    }
+
     function openExternalLabel(action) {
       if (action.id === "secondhand") return "中古品ページを開く";
       if (action.id === "repair") return "修理履歴ページを開く";
@@ -94,12 +111,17 @@ export const ActionMenuPage = {
       selectedMode,
       selectedAction,
       isExternalMode,
+      isInfoMode,
       selectedActionId,
       pageActions,
       isDone,
       markDone,
       markExternalDone,
       externalMessage,
+      viewedInfo,
+      openInfo,
+      infoOpenLabel,
+      infoReadLabel,
       openExternalLabel,
       actionDescription,
     };
@@ -118,6 +140,11 @@ export const ActionMenuPage = {
             <a :href="action.url" target="_blank" rel="noopener" class="btn">{{ openExternalLabel(action) }}</a>
             <button v-if="!isDone(action)" class="btn btn-primary" @click="markExternalDone(action)">今日記入した</button>
             <p v-if="externalMessage && !isDone(action)" class="external-action-message">{{ externalMessage }}</p>
+          </div>
+
+          <div class="detail-body" v-else-if="isInfoMode">
+            <button type="button" class="btn" @click="openInfo(action)">{{ infoOpenLabel(action) }}</button>
+            <button v-if="!isDone(action)" type="button" class="btn btn-primary" :disabled="!viewedInfo" @click="markDone(action)">{{ infoReadLabel(action) }}</button>
           </div>
 
           <div class="detail-body" v-else>

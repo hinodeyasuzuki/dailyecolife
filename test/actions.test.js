@@ -2,8 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ACTIONS } from "../data/actions.js";
 
-test("ACTIONSは12件定義されている", () => {
-  assert.equal(ACTIONS.length, 12);
+test("ACTIONSは14件定義されている", () => {
+  assert.equal(ACTIONS.length, 14);
 });
 
 test("recordIndexは0〜13の範囲で重複がない", () => {
@@ -28,6 +28,12 @@ test("orderは1から連番で重複しない", () => {
 
 test("externalタイプは全てurlを持つ", () => {
   for (const a of ACTIONS.filter((a) => a.type === "external")) {
+    assert.ok(a.url, `${a.id} にurlがない`);
+  }
+});
+
+test("infoタイプは全てurlを持つ", () => {
+  for (const a of ACTIONS.filter((a) => a.type === "info")) {
     assert.ok(a.url, `${a.id} にurlがない`);
   }
 });
