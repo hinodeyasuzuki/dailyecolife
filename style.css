@@ -134,6 +134,11 @@ input:focus-visible {
   color: #1d764f;
 }
 
+.status-badge.partial {
+  background: #fff8d9;
+  color: #826b16;
+}
+
 .status-badge.pending {
   background: #fff2e4;
   color: #915622;
@@ -320,6 +325,17 @@ input:focus-visible {
   gap: 6px;
 }
 
+.history-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
 .history-day {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -334,6 +350,10 @@ input:focus-visible {
   background: #daf2e4;
   color: #1f694a;
   font-weight: 700;
+}
+
+.history-day.empty-day {
+  visibility: hidden;
 }
 
 .load-error {

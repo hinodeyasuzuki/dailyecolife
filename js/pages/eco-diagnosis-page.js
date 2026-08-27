@@ -11,7 +11,7 @@ const { ref, watch, onMounted } = Vue;
 const diagnosisAction = ACTIONS.find((a) => a.type === "eco-diagnosis");
 
 export const EcoDiagnosisPage = {
-  emits: ["updated"],
+  emits: ["updated", "point-earned"],
   props: {
     refreshTick: {
       type: Number,
@@ -61,6 +61,7 @@ export const EcoDiagnosisPage = {
       diagnosisItem.value = { ...diagnosisItem.value, answerVal: val };
       if (!isDone()) {
         setActionRecorded(store, todayKey, diagnosisAction.recordIndex);
+        emit("point-earned");
       }
       refreshRecords();
       emit("updated");

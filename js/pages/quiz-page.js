@@ -10,7 +10,7 @@ const { ref, watch, onMounted } = Vue;
 const quizAction = ACTIONS.find((a) => a.type === "quiz");
 
 export const QuizPage = {
-  emits: ["updated"],
+  emits: ["updated", "point-earned"],
   props: {
     refreshTick: {
       type: Number,
@@ -57,6 +57,7 @@ export const QuizPage = {
       setActionRecorded(store, todayKey, quizAction.recordIndex);
       refreshRecords();
       emit("updated");
+      emit("point-earned");
     }
 
     watch(

@@ -28,7 +28,7 @@ function monthLabel(monthKey) {
 }
 
 export const MeterReadingPage = {
-  emits: ["updated"],
+  emits: ["updated", "point-earned"],
   props: {
     refreshTick: {
       type: Number,
@@ -68,9 +68,22 @@ export const MeterReadingPage = {
       recordsData.value = loadJSON(store, RECORDS_KEY, {});
     }
 
+    function completedPairCount() {
+      return METER_PAIRS.filter(({ energyCode, costCode }) =>
+        typeof meterValues[energyCode] === "number" &&
+        typeof meterValues[costCode] === "number" &&
+        !Number.isNaN(meterValues[energyCode]) &&
+        !Number.isNaN(meterValues[costCode])
+      ).length;
+    }
+
     function isDone() {
-      if (!meterAction) return false;
-      return isActionRecordedInMonth(recordsStore(), selectedMonthKey.value, meterAction.recordIndex);
+      return completedPairCount() === METER_PAIRS.length;
+    }
+
+    function isPartDone() {
+      const completed = completedPairCount();
+      return completed > 0 && completed < METER_PAIRS.length;
     }
 
     function loadMonthReading() {
@@ -118,6 +131,7 @@ export const MeterReadingPage = {
       if (awarded) {
         refreshRecords();
         emit("updated");
+        emit("point-earned");
       }
     }
 
@@ -146,6 +160,7 @@ export const MeterReadingPage = {
       monthOptions,
       meterPairs,
       isDone,
+      isPartDone,
       saveReading,
       loadForm,
       actionDescription,
@@ -156,8 +171,8 @@ export const MeterReadingPage = {
       <article class="detail-panel" v-if="meterAction">
         <h2>{{ meterAction.label }}</h2>
         <p class="detail-description">{{ actionDescription(meterAction) }}</p>
-        <p class="detail-achievement" :class="{done: isDone()}">
-          {{ isDone() ? 'この月の検針票記録は達成済みです。' : '使用量と料金をセットで入力してください。' }}
+        <p class="detail-achievement" :class="{done: isDone(), partial: isPartDone()}">
+          {{ isDone() ? 'この月の検針票記録は達成済みです。' : isPartDone() ? '一部達成済みです。' : '使用量と料金をセットで入力してください。' }}
         </p>
 
         <div class="detail-body">
@@ -194,6 +209,7 @@ export const MeterReadingPage = {
           </template>
         </div>
       </article>
+
     </section>
   `,
 };

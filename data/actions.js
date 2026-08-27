@@ -12,5 +12,5 @@ export const ACTIONS = [
   { id: "ecocheck", recordIndex: 10, order: 11, category: "自分の暮らし", label: "エコ診断", type: "eco-diagnosis" },
   { id: "meterread", recordIndex: 11, order: 12, category: "自分の暮らし", label: "検針票記録", type: "meter-reading" },
   { id: "energyhint", recordIndex: 12, order: 13, category: "省エネ", label: "省エネのヒント", type: "info", url: "https://s8.hinodeya-ecolife.com/ecoinfo/practice.php?action=recommend" },
-  { id: "repairhint", recordIndex: 13, order: 14, category: "過去のこと", label: "修理のヒント", type: "info", url: "https://s8.hinodeya-ecolife.com/repairinfo/equipment..php?action=recommend" },
+  { id: "repairhint", recordIndex: 13, order: 14, category: "過去のこと", label: "修理のヒント", type: "info", url: "https://s8.hinodeya-ecolife.com/repairinfo/equipment.php?action=recommend" },
 ];

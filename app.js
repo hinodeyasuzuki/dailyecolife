@@ -1,7 +1,8 @@
 import { ACTIONS } from "./data/actions.js";
-import { RECORDS_KEY, countPointsForDay, isActionRecorded, isActionRecordedInMonth } from "./js/records.js";
+import { RECORDS_KEY, countPointsForDay, isActionRecorded } from "./js/records.js";
 import { loadJSON } from "./js/storage.js";
-import { dateKeyDaysAgo, todayDateKey, todayMonthKey } from "./js/date.js";
+import { getMonthReading } from "./js/meterreading.js";
+import { dateKeyDaysAgo, todayDateKey, todayDisplayDate, todayMonthKey } from "./js/date.js";
 import { HistoryPage } from "./js/pages/history-page.js";
 import { QuizPage } from "./js/pages/quiz-page.js";
 import { EcoDiagnosisPage } from "./js/pages/eco-diagnosis-page.js";
@@ -19,10 +20,42 @@ const PAGE_COMPONENTS = {
 };
 
 const actionById = Object.fromEntries(ACTIONS.map((a) => [a.id, a]));
+const METER_PAIRS = [
+  ["elect", "electp"],
+  ["nagas", "nagasp"],
+  ["lpgas", "lpgasp"],
+  ["keros", "kerosp"],
+  ["gasol", "gasolp"],
+  ["water", "waterp"],
+];
 
 const MENU_ITEMS = [
   { key: "quiz", title: "環境クイズ", actionId: "quiz" },
   { key: "diagnosis", title: "今日のエコ診断", actionId: "ecocheck" },
+  {
+    key: "actionMenu",
+    title: "今日の省エネのヒント",
+    actionId: "energyhint",
+    params: { actionId: "energyhint", title: "省エネのヒント" },
+  },
+  {
+    key: "actionMenu",
+    title: "今日の修理のヒント",
+    actionId: "repairhint",
+    params: { actionId: "repairhint", title: "修理のヒント" },
+  },
+  {
+    key: "actionMenu",
+    title: "省エネの工夫",
+    actionId: "energysave",
+    params: { actionId: "energysave", title: "省エネの工夫" },
+  },
+  {
+    key: "actionMenu",
+    title: "車の使用を削減",
+    actionId: "lesscar",
+    params: { actionId: "lesscar", title: "車の使用を削減" },
+  },
   {
     key: "actionMenu",
     title: "食品ロスゼロ",
@@ -43,22 +76,17 @@ const MENU_ITEMS = [
   },
   {
     key: "actionMenu",
-    title: "省エネの工夫",
-    actionId: "energysave",
-    params: { actionId: "energysave", title: "省エネの工夫" },
+    title: "環境ニュースで情報収集",
+    actionId: "news",
+    params: { actionId: "news", title: "環境ニュースで情報収集" },
   },
   {
     key: "actionMenu",
-    title: "今日の省エネのヒント",
-    actionId: "energyhint",
-    params: { actionId: "energyhint", title: "省エネのヒント" },
+    title: "環境コミュニケーション",
+    actionId: "talk",
+    params: { actionId: "talk", title: "環境コミュニケーション" },
   },
-  {
-    key: "actionMenu",
-    title: "車の使用を削減",
-    actionId: "lesscar",
-    params: { actionId: "lesscar", title: "車の使用を削減" },
-  },
+  { key: "meter", title: "検針票記録", actionId: "meterread" },
   {
     key: "actionMenu",
     title: "中古品購入",
@@ -71,25 +99,6 @@ const MENU_ITEMS = [
     actionId: "repair",
     params: { actionId: "repair", title: "修理修繕・リペア" },
   },
-  {
-    key: "actionMenu",
-    title: "今日の修理のヒント",
-    actionId: "repairhint",
-    params: { actionId: "repairhint", title: "修理のヒント" },
-  },
-  {
-    key: "actionMenu",
-    title: "環境ニュースで情報収集",
-    actionId: "news",
-    params: { actionId: "news", title: "環境ニュースで情報収集" },
-  },
-  {
-    key: "actionMenu",
-    title: "環境コミュニケーション",
-    actionId: "talk",
-    params: { actionId: "talk", title: "環境コミュニケーション" },
-  },
-  { key: "meter", title: "検針票記録", actionId: "meterread" },
 ];
 
 const PAGE_TITLES = {
@@ -114,6 +123,7 @@ const app = createApp({
     const store = window.localStorage;
     const todayKey = todayDateKey();
     const monthKey = todayMonthKey();
+    const displayDate = todayDisplayDate();
 
     const currentPage = ref("menu");
     const currentPageParams = ref({});
@@ -123,6 +133,7 @@ const app = createApp({
     const privacyAgreed = ref(false);
     const showPrivacyPolicy = ref(false);
     const showAbout = ref(false);
+    const showPointNotice = ref(false);
 
     window.history.pushState(menuHistoryState, "", window.location.href);
 
@@ -166,6 +177,11 @@ const app = createApp({
       refreshRecords();
     }
 
+    function handlePointEarned() {
+      showPointNotice.value = true;
+      handleUpdated();
+    }
+
     function acceptPrivacyPolicy() {
       if (!privacyAgreed.value) return;
       store.setItem(PRIVACY_CONSENT_KEY, "accepted");
@@ -176,13 +192,28 @@ const app = createApp({
       const action = actionById[item.actionId];
       if (!action) return false;
       if (action.type === "meter-reading") {
-        return isActionRecordedInMonth(recordsStore(), monthKey, action.recordIndex);
+        const reading = getMonthReading(store, monthKey);
+        return METER_PAIRS.every(([energyCode, costCode]) =>
+          typeof reading[energyCode] === "number" && typeof reading[costCode] === "number"
+        );
       }
       return isActionRecorded(recordsStore(), todayKey, action.recordIndex);
     }
 
+    function isMenuItemPartial(item) {
+      const action = actionById[item.actionId];
+      if (!action || action.type !== "meter-reading") return false;
+      const reading = getMonthReading(store, monthKey);
+      const completed = METER_PAIRS.filter(([energyCode, costCode]) =>
+        typeof reading[energyCode] === "number" && typeof reading[costCode] === "number"
+      ).length;
+      return completed > 0 && completed < METER_PAIRS.length;
+    }
+
     function menuItemStatusText(item) {
-      return isMenuItemDone(item) ? "達成" : "未達成";
+      if (isMenuItemDone(item)) return "達成";
+      if (isMenuItemPartial(item)) return "一部達成";
+      return "未達成";
     }
 
     const todayPoints = computed(() => countPointsForDay(recordsStore(), todayKey));
@@ -215,6 +246,7 @@ const app = createApp({
       currentPageParams,
       currentComponent,
       currentTitle,
+      displayDate,
       refreshTick,
       todayPoints,
       totalPoints,
@@ -222,18 +254,21 @@ const app = createApp({
       privacyAgreed,
       showPrivacyPolicy,
       showAbout,
+      showPointNotice,
       openPage,
       backToMenu,
       handleUpdated,
+      handlePointEarned,
       acceptPrivacyPolicy,
       isMenuItemDone,
+      isMenuItemPartial,
       menuItemStatusText,
     };
   },
   template: `
     <div>
       <header class="app-header">
-        <h1>毎日エコライフ</h1>
+        <h1>毎日エコライフ（{{ displayDate }}）</h1>
         <div class="point-summary">今日のポイント: {{ todayPoints }} / 直近2ヶ月のポイント: {{ totalPoints }}</div>
       </header>
 
@@ -248,7 +283,7 @@ const app = createApp({
             @click="openPage(item.key, item.params || {})">
             <div class="action-card-title">
               <span>{{ item.title }}</span>
-              <span class="status-badge" :class="isMenuItemDone(item) ? 'done' : 'pending'">
+              <span class="status-badge" :class="isMenuItemDone(item) ? 'done' : isMenuItemPartial(item) ? 'partial' : 'pending'">
                 {{ menuItemStatusText(item) }}
               </span>
             </div>
@@ -263,7 +298,8 @@ const app = createApp({
           :is="currentComponent"
           :refresh-tick="refreshTick"
           :page-params="currentPageParams"
-          @updated="handleUpdated"></component>
+          @updated="handleUpdated"
+          @point-earned="handlePointEarned"></component>
       </section>
 
       <footer class="app-footer">
@@ -301,6 +337,13 @@ const app = createApp({
           <p>クイズ、エコ診断、検針票記録などを通して、暮らしの中の環境との関わりを見つめます。</p>
           <p><a href="https://www.hinodeya-ecolife.com/" target="_blank" rel="noopener noreferrer">有限会社ひのでやエコライフ研究所</a>が提供しています。</p>
           <button type="button" class="btn" @click="showAbout = false">閉じる</button>
+        </section>
+      </div>
+
+      <div v-if="showPointNotice" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="point-notice-title">
+        <section class="modal-content">
+          <h2 id="point-notice-title">ポイント取得。<br />環境の取り組みありがとうございます。</h2>
+          <button type="button" class="btn btn-primary" @click="showPointNotice = false">閉じる</button>
         </section>
       </div>
     </div>

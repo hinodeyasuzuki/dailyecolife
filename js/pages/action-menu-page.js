@@ -8,7 +8,7 @@ import { actionDescription } from "../action-meta.js";
 const { ref, computed, watch } = Vue;
 
 export const ActionMenuPage = {
-  emits: ["updated"],
+  emits: ["updated", "point-earned"],
   props: {
     refreshTick: {
       type: Number,
@@ -67,6 +67,7 @@ export const ActionMenuPage = {
       setActionRecorded(store, todayKey, action.recordIndex);
       refreshRecords();
       emit("updated");
+      emit("point-earned");
     }
 
     function markExternalDone(action) {

@@ -6,6 +6,18 @@ export function todayDateKey() {
   return `${y}${m}${day}`;
 }
 
+export function todayDisplayDate() {
+  const d = new Date();
+  return `${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+export function dateKeyWeekday(dateKey) {
+  const year = Number(dateKey.slice(0, 4));
+  const month = Number(dateKey.slice(4, 6));
+  const day = Number(dateKey.slice(6, 8));
+  return new Date(year, month - 1, day).getDay();
+}
+
 export function todayMonthKey() {
   return todayDateKey().slice(0, 6);
 }
