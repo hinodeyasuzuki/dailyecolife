@@ -88,6 +88,7 @@ const PAGE_TITLES = {
 };
 
 const menuHistoryState = { dailyecolifePage: "menu", params: {} };
+const PRIVACY_CONSENT_KEY = "dailyecolife_privacy_consent";
 
 const app = createApp({
   components: {
@@ -106,6 +107,10 @@ const app = createApp({
     const currentPageParams = ref({});
     const refreshTick = ref(0);
     const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
+    const showWelcome = ref(store.getItem(PRIVACY_CONSENT_KEY) !== "accepted");
+    const privacyAgreed = ref(false);
+    const showPrivacyPolicy = ref(false);
+    const showAbout = ref(false);
 
     window.history.pushState(menuHistoryState, "", window.location.href);
 
@@ -147,6 +152,12 @@ const app = createApp({
     function handleUpdated() {
       refreshTick.value += 1;
       refreshRecords();
+    }
+
+    function acceptPrivacyPolicy() {
+      if (!privacyAgreed.value) return;
+      store.setItem(PRIVACY_CONSENT_KEY, "accepted");
+      showWelcome.value = false;
     }
 
     function isMenuItemDone(item) {
@@ -195,9 +206,14 @@ const app = createApp({
       refreshTick,
       todayPoints,
       totalPoints,
+      showWelcome,
+      privacyAgreed,
+      showPrivacyPolicy,
+      showAbout,
       openPage,
       backToMenu,
       handleUpdated,
+      acceptPrivacyPolicy,
       isMenuItemDone,
       menuItemStatusText,
     };
@@ -209,27 +225,24 @@ const app = createApp({
         <div class="point-summary">今日のポイント: {{ todayPoints }} / 直近2ヶ月のポイント: {{ totalPoints }}</div>
       </header>
 
-      <section v-if="currentPage === 'menu'" class="menu-grid">
-        <button
-          type="button"
-          class="btn btn-primary history-op-button"
-          @click="openPage('history')">
-          履歴を開く
-        </button>
-        <button
-          v-for="item in MENU_ITEMS"
-          :key="item.title"
-          type="button"
-          class="action-card action-card-button top-menu-card"
-          :class="{done: isMenuItemDone(item)}"
-          @click="openPage(item.key, item.params || {})">
-          <div class="action-card-title">
-            <span>{{ item.title }}</span>
-            <span class="status-badge" :class="isMenuItemDone(item) ? 'done' : 'pending'">
-              {{ menuItemStatusText(item) }}
-            </span>
-          </div>
-        </button>
+      <section v-if="currentPage === 'menu'" class="menu-screen">
+        <div class="menu-grid">
+          <button
+            v-for="item in MENU_ITEMS"
+            :key="item.title"
+            type="button"
+            class="action-card action-card-button top-menu-card"
+            :class="{done: isMenuItemDone(item)}"
+            @click="openPage(item.key, item.params || {})">
+            <div class="action-card-title">
+              <span>{{ item.title }}</span>
+              <span class="status-badge" :class="isMenuItemDone(item) ? 'done' : 'pending'">
+                {{ menuItemStatusText(item) }}
+              </span>
+            </div>
+          </button>
+        </div>
+        <button type="button" class="btn menu-history-button" @click="openPage('history')">ポイント履歴</button>
       </section>
 
       <section v-else class="detail-screen">
@@ -240,6 +253,43 @@ const app = createApp({
           :page-params="currentPageParams"
           @updated="handleUpdated"></component>
       </section>
+
+      <footer class="app-footer">
+        <button type="button" class="btn btn-ghost footer-link" @click="showPrivacyPolicy = true">プライバシーポリシー</button>
+        <button type="button" class="btn btn-ghost footer-link" @click="showAbout = true">このアプリについて</button>
+      </footer>
+
+      <div v-if="showWelcome" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+        <section class="modal-content">
+          <h2 id="welcome-title">毎日エコライフへようこそ</h2>
+          <p>日々の環境にやさしい行動を記録し、ポイントとして振り返るアプリです。</p>
+          <p>記録はこの端末のブラウザ内に保存されます。</p>
+          <label class="consent-check">
+            <input type="checkbox" v-model="privacyAgreed">
+            <span>プライバシーポリシーに同意する</span>
+          </label>
+          <button type="button" class="btn btn-ghost modal-policy-link" @click="showPrivacyPolicy = true">プライバシーポリシーを確認</button>
+          <button type="button" class="btn btn-primary" :disabled="!privacyAgreed" @click="acceptPrivacyPolicy">はじめる</button>
+        </section>
+      </div>
+
+      <div v-if="showPrivacyPolicy" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
+        <section class="modal-content">
+          <h2 id="privacy-title">プライバシーポリシー</h2>
+          <p>このアプリは、行動記録と設定をお使いのブラウザのlocalStorageに保存します。記録は運営者のサーバーへ送信されません。</p>
+          <p>クイズと検針票の項目を表示するため、公開APIへアクセスします。外部記録ページを開いた場合は、そのページのポリシーもご確認ください。</p>
+          <button type="button" class="btn" @click="showPrivacyPolicy = false">閉じる</button>
+        </section>
+      </div>
+
+      <div v-if="showAbout" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="about-title">
+        <section class="modal-content">
+          <h2 id="about-title">このアプリについて</h2>
+          <p>毎日エコライフは、日常でできる環境配慮行動を記録し、継続を振り返るためのアプリです。</p>
+          <p>クイズ、エコ診断、検針票記録などを通して、暮らしの中の環境との関わりを見つめます。</p>
+          <button type="button" class="btn" @click="showAbout = false">閉じる</button>
+        </section>
+      </div>
     </div>
   `,
 });

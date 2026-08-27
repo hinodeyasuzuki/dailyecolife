@@ -63,9 +63,16 @@ body {
   gap: 10px;
 }
 
-.history-op-button {
-  grid-column: 1 / -1;
-  min-height: 50px;
+.menu-screen {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+}
+
+.menu-history-button {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 0.86rem;
 }
 
 .action-card {
@@ -346,6 +353,61 @@ input:focus-visible {
   color: var(--warn);
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.app-footer {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 28px;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.footer-link {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.modal-backdrop {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(19, 45, 32, 0.48);
+}
+
+.modal-content {
+  width: min(100%, 480px);
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.modal-content h2,
+.modal-content p {
+  margin: 0;
+}
+
+.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.consent-check input {
+  margin-top: 6px;
+}
+
+.modal-policy-link {
+  justify-self: start;
 }
 
 #quiz-page .detail-panel {
