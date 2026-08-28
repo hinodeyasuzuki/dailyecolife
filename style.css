@@ -51,6 +51,14 @@ body {
   font-size: clamp(1.45rem, 2.6vw, 1.95rem);
 }
 
+.series-name {
+  margin: 0 0 3px;
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
 .point-summary {
   margin-top: 6px;
   color: var(--muted);
@@ -67,6 +75,23 @@ body {
   display: grid;
   justify-items: center;
   gap: 16px;
+}
+
+.menu-sections {
+  display: grid;
+  width: 100%;
+  gap: 22px;
+}
+
+.menu-section {
+  width: 100%;
+}
+
+.menu-section-title {
+  margin: 0 0 8px;
+  color: var(--accent-strong);
+  font-size: 1rem;
+  letter-spacing: 0.04em;
 }
 
 .menu-history-button {

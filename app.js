@@ -46,6 +46,12 @@ const MENU_ITEMS = [
   },
   {
     key: "actionMenu",
+    title: "ニュースで環境情報収集",
+    actionId: "news",
+    params: { actionId: "news", title: "ニュースで環境情報収集" },
+  },
+  {
+    key: "actionMenu",
     title: "省エネの工夫",
     actionId: "energysave",
     params: { actionId: "energysave", title: "省エネの工夫" },
@@ -76,17 +82,10 @@ const MENU_ITEMS = [
   },
   {
     key: "actionMenu",
-    title: "環境ニュースで情報収集",
-    actionId: "news",
-    params: { actionId: "news", title: "環境ニュースで情報収集" },
-  },
-  {
-    key: "actionMenu",
     title: "環境コミュニケーション",
     actionId: "talk",
     params: { actionId: "talk", title: "環境コミュニケーション" },
   },
-  { key: "meter", title: "検針票記録", actionId: "meterread" },
   {
     key: "actionMenu",
     title: "中古品購入",
@@ -99,6 +98,13 @@ const MENU_ITEMS = [
     actionId: "repair",
     params: { actionId: "repair", title: "修理修繕・リペア" },
   },
+  { key: "meter", title: "検針票記録", actionId: "meterread" },
+];
+
+const MENU_SECTIONS = [
+  { id: "information", title: "情報", items: MENU_ITEMS.slice(0, 5) },
+  { id: "daily", title: "今日の取り組み", items: MENU_ITEMS.slice(5, 11) },
+  { id: "occasional", title: "時々の取り組み", items: MENU_ITEMS.slice(11) },
 ];
 
 const PAGE_TITLES = {
@@ -109,7 +115,21 @@ const PAGE_TITLES = {
 };
 
 const menuHistoryState = { dailyecolifePage: "menu", params: {} };
-const PRIVACY_CONSENT_KEY = "dailyecolife_privacy_consent";
+const PRIVACY_CONSENT_KEY = "ecolife.privacyPolicyConsent";
+const PRIVACY_POLICY_VERSION = "2026-08-28";
+const LEGACY_PRIVACY_CONSENT_KEY = "dailyecolife_privacy_consent";
+const LEGACY_ECOLIFE_CONSENT_KEY = "myecoliferecords.privacyPolicyConsent";
+const LEGACY_ECOLIFE_CONSENT_VERSION = "2026-08-27";
+const LEGACY_REPAIR_CONSENT_KEY = "myrepair-privacy-consent";
+
+function hasPrivacyConsent(store) {
+  if (store.getItem(PRIVACY_CONSENT_KEY) === PRIVACY_POLICY_VERSION) return true;
+  const acceptedPreviously = store.getItem(LEGACY_PRIVACY_CONSENT_KEY) === "accepted"
+    || store.getItem(LEGACY_ECOLIFE_CONSENT_KEY) === LEGACY_ECOLIFE_CONSENT_VERSION
+    || store.getItem(LEGACY_REPAIR_CONSENT_KEY) === "accepted";
+  if (acceptedPreviously) store.setItem(PRIVACY_CONSENT_KEY, PRIVACY_POLICY_VERSION);
+  return acceptedPreviously;
+}
 
 const app = createApp({
   components: {
@@ -129,7 +149,7 @@ const app = createApp({
     const currentPageParams = ref({});
     const refreshTick = ref(0);
     const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
-    const showWelcome = ref(store.getItem(PRIVACY_CONSENT_KEY) !== "accepted");
+    const showWelcome = ref(!hasPrivacyConsent(store));
     const privacyAgreed = ref(false);
     const showPrivacyPolicy = ref(false);
     const showAbout = ref(false);
@@ -184,7 +204,7 @@ const app = createApp({
 
     function acceptPrivacyPolicy() {
       if (!privacyAgreed.value) return;
-      store.setItem(PRIVACY_CONSENT_KEY, "accepted");
+      store.setItem(PRIVACY_CONSENT_KEY, PRIVACY_POLICY_VERSION);
       showWelcome.value = false;
     }
 
@@ -242,6 +262,7 @@ const app = createApp({
 
     return {
       MENU_ITEMS,
+      MENU_SECTIONS,
       currentPage,
       currentPageParams,
       currentComponent,
@@ -268,26 +289,32 @@ const app = createApp({
   template: `
     <div>
       <header class="app-header">
+        <p class="series-name">暮らしの選択ノート</p>
         <h1>毎日エコライフ（{{ displayDate }}）</h1>
         <div class="point-summary">今日のポイント: {{ todayPoints }} / 直近2ヶ月のポイント: {{ totalPoints }}</div>
       </header>
 
       <section v-if="currentPage === 'menu'" class="menu-screen">
-        <div class="menu-grid">
-          <button
-            v-for="item in MENU_ITEMS"
-            :key="item.title"
-            type="button"
-            class="action-card action-card-button top-menu-card"
-            :class="{done: isMenuItemDone(item)}"
-            @click="openPage(item.key, item.params || {})">
-            <div class="action-card-title">
-              <span>{{ item.title }}</span>
-              <span class="status-badge" :class="isMenuItemDone(item) ? 'done' : isMenuItemPartial(item) ? 'partial' : 'pending'">
-                {{ menuItemStatusText(item) }}
-              </span>
+        <div class="menu-sections">
+          <section v-for="section in MENU_SECTIONS" :key="section.id" class="menu-section" :aria-labelledby="'menu-section-' + section.id">
+            <h2 :id="'menu-section-' + section.id" class="menu-section-title">{{ section.title }}</h2>
+            <div class="menu-grid">
+              <button
+                v-for="item in section.items"
+                :key="item.title"
+                type="button"
+                class="action-card action-card-button top-menu-card"
+                :class="{done: isMenuItemDone(item)}"
+                @click="openPage(item.key, item.params || {})">
+                <div class="action-card-title">
+                  <span>{{ item.title }}</span>
+                  <span class="status-badge" :class="isMenuItemDone(item) ? 'done' : isMenuItemPartial(item) ? 'partial' : 'pending'">
+                    {{ menuItemStatusText(item) }}
+                  </span>
+                </div>
+              </button>
             </div>
-          </button>
+          </section>
         </div>
         <button type="button" class="btn menu-history-button" @click="openPage('history')">ポイント履歴</button>
       </section>
@@ -303,18 +330,20 @@ const app = createApp({
       </section>
 
       <footer class="app-footer">
+        <a class="btn btn-ghost footer-link" href="../ehome/">暮らしの選択ノート</a>
         <button type="button" class="btn btn-ghost footer-link" @click="showPrivacyPolicy = true">プライバシーポリシー</button>
         <button type="button" class="btn btn-ghost footer-link" @click="showAbout = true">このアプリについて</button>
       </footer>
 
       <div v-if="showWelcome" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
         <section class="modal-content">
+          <p class="series-name">暮らしの選択ノート</p>
           <h2 id="welcome-title">毎日エコライフへようこそ</h2>
-          <p>日々の環境にやさしい行動を記録し、ポイントとして振り返るアプリです。</p>
+          <p>日々の小さな行動を記録し、ポイントとして振り返るアプリです。</p>
           <p>記録はこの端末のブラウザ内に保存されます。</p>
           <label class="consent-check">
             <input type="checkbox" v-model="privacyAgreed">
-            <span>プライバシーポリシーに同意する</span>
+            <span>暮らしの選択ノートの利用方針に同意する</span>
           </label>
           <button type="button" class="btn btn-ghost modal-policy-link" @click="showPrivacyPolicy = true">プライバシーポリシーを確認</button>
           <button type="button" class="btn btn-primary" :disabled="!privacyAgreed" @click="acceptPrivacyPolicy">はじめる</button>
@@ -323,8 +352,8 @@ const app = createApp({
 
       <div v-if="showPrivacyPolicy" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
         <section class="modal-content">
-          <h2 id="privacy-title">プライバシーポリシー</h2>
-          <p>このアプリは、行動記録と設定をお使いのブラウザのlocalStorageに保存します。記録は運営者のサーバーへ送信されません。</p>
+          <h2 id="privacy-title">暮らしの選択ノートの利用方針</h2>
+          <p>このシリーズは、行動記録と設定をお使いのブラウザのlocalStorageに保存します。記録は運営者のサーバーへ送信されません。</p>
           <p>クイズと検針票の項目を表示するため、公開APIへアクセスします。外部記録ページを開いた場合は、そのページのポリシーもご確認ください。</p>
           <button type="button" class="btn" @click="showPrivacyPolicy = false">閉じる</button>
         </section>
