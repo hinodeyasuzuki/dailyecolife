@@ -1,4 +1,4 @@
-const BASE_URL = "../homeenergycodes-public/api/v1/";
+const BASE_URL = "https://hinodeyasuzuki.github.io/homeenergycodes-public/api/v1/";
 
 export const INPUT_JSON_URL = `${BASE_URL}input.json`;
 export const ENERGY_JSON_URL = `${BASE_URL}energy.json`;

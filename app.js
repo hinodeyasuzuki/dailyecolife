@@ -373,6 +373,7 @@ const app = createApp({
           :page-params="currentPageParams"
           @updated="handleUpdated"
           @point-earned="handlePointEarned"></component>
+        <button class="btn btn-ghost mt-10" @click="backToMenu">< メニューに戻る</button>
       </section>
 
       <footer class="app-footer">

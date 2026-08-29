@@ -36,6 +36,9 @@ body {
   padding: 18px 14px 32px;
 }
 
+.mt-10 {
+  margin-top: 10px;
+}
 .app-header {
   margin-bottom: 14px;
   padding: 16px;
