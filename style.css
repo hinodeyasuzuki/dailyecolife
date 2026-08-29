@@ -172,6 +172,11 @@ input:focus-visible {
   color: #915622;
 }
 
+.status-badge.answered {
+  background: #e8f0fb;
+  color: #2d5c8a;
+}
+
 .detail-screen {
   animation: slideIn 220ms ease;
 }

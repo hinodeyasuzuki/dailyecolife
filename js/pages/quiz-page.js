@@ -5,7 +5,7 @@ import { getTodayQuiz, answerQuiz } from "../quiz.js";
 import { todayDateKey } from "../date.js";
 import { actionDescription } from "../action-meta.js";
 
-const { ref, watch, onMounted } = Vue;
+const { ref, computed, watch, onMounted } = Vue;
 
 const quizAction = ACTIONS.find((a) => a.type === "quiz");
 
@@ -24,6 +24,14 @@ export const QuizPage = {
     const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
     const quiz = ref(null);
     const loadError = ref(null);
+
+    const options = computed(() => {
+      const question = quiz.value && quiz.value.question;
+      if (!question) return [];
+      return [1, 2, 3, 4].filter(
+        (n) => typeof question["option" + n] === "string" && question["option" + n].trim() !== ""
+      );
+    });
 
     function recordsStore() {
       return {
@@ -54,10 +62,14 @@ export const QuizPage = {
       if (!quizAction || !quiz.value || quiz.value.answeredOption !== null) return;
       const result = answerQuiz(store, todayKey, optionIndex);
       quiz.value = { ...quiz.value, answeredOption: optionIndex, correct: result.correct };
-      setActionRecorded(store, todayKey, quizAction.recordIndex);
+      if (result.correct) {
+        setActionRecorded(store, todayKey, quizAction.recordIndex);
+      }
       refreshRecords();
       emit("updated");
-      emit("point-earned");
+      if (result.correct) {
+        emit("point-earned");
+      }
     }
 
     watch(
@@ -74,6 +86,7 @@ export const QuizPage = {
     return {
       quizAction,
       quiz,
+      options,
       loadError,
       isDone,
       submitAnswer,
@@ -97,7 +110,7 @@ export const QuizPage = {
           </div>
           <template v-else-if="quiz">
             <p class="detail-question">{{ quiz.question.question }}</p>
-            <div v-for="n in [1,2,3,4]" :key="n">
+            <div v-for="n in options" :key="n">
               <button class="btn option-btn" :class="{ selected: quiz.answeredOption === n }" :disabled="quiz.answeredOption !== null" @click="submitAnswer(n)">
                 {{ quiz.question['option' + n] }}
               </button>

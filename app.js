@@ -1,6 +1,7 @@
 import { ACTIONS } from "./data/actions.js";
 import { RECORDS_KEY, countPointsForDay, isActionRecorded } from "./js/records.js";
 import { loadJSON } from "./js/storage.js";
+import { isQuizAnswered } from "./js/quiz.js";
 import { getMonthReading } from "./js/meterreading.js";
 import { dateKeyDaysAgo, todayDateKey, todayDisplayDate, todayMonthKey } from "./js/date.js";
 import { HistoryPage } from "./js/pages/history-page.js";
@@ -275,10 +276,24 @@ const app = createApp({
       return completed > 0 && completed < METER_PAIRS.length;
     }
 
+    function isMenuItemAnswered(item) {
+      const action = actionById[item.actionId];
+      if (!action || action.type !== "quiz") return false;
+      return isQuizAnswered(store, todayKey);
+    }
+
     function menuItemStatusText(item) {
       if (isMenuItemDone(item)) return "達成";
+      if (isMenuItemAnswered(item)) return "回答済";
       if (isMenuItemPartial(item)) return "一部達成";
       return "未達成";
+    }
+
+    function menuItemStatusClass(item) {
+      if (isMenuItemDone(item)) return "done";
+      if (isMenuItemAnswered(item)) return "answered";
+      if (isMenuItemPartial(item)) return "partial";
+      return "pending";
     }
 
     const todayPoints = computed(() => countPointsForDay(recordsStore(), todayKey));
@@ -329,7 +344,9 @@ const app = createApp({
       acceptPrivacyPolicy,
       isMenuItemDone,
       isMenuItemPartial,
+      isMenuItemAnswered,
       menuItemStatusText,
+      menuItemStatusClass,
     };
   },
   template: `
@@ -354,7 +371,7 @@ const app = createApp({
                 @click="openPage(item.key, item.params || {})">
                 <div class="action-card-title">
                   <span>{{ item.title }}</span>
-                  <span class="status-badge" :class="isMenuItemDone(item) ? 'done' : isMenuItemPartial(item) ? 'partial' : 'pending'">
+                  <span class="status-badge" :class="menuItemStatusClass(item)">
                     {{ menuItemStatusText(item) }}
                   </span>
                 </div>

@@ -1,8 +1,8 @@
 import { loadJSON, saveJSON } from "./storage.js";
 
 export const QUIZ_KEY = "dailyecolife_quiz";
-//export const QUIZ_API_URL = "https://s8.hinodeya-ecolife.com/quizapi/";
-export const QUIZ_API_URL = "http://localhost/dev/quizapi/";
+export const QUIZ_API_URL = "https://s8.hinodeya-ecolife.com/quizapi/";
+//export const QUIZ_API_URL = "http://localhost/dev/quizapi/";
 
 function loadAllQuiz(store) {
   return loadJSON(store, QUIZ_KEY, {});
@@ -35,4 +35,10 @@ export function answerQuiz(store, dateKey, optionIndex) {
   entry.correct = correct;
   saveJSON(store, QUIZ_KEY, all);
   return { correct };
+}
+
+export function isQuizAnswered(store, dateKey) {
+  const all = loadAllQuiz(store);
+  const entry = all[dateKey];
+  return Boolean(entry && entry.answeredOption !== null);
 }
