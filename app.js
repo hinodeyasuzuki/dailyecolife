@@ -9,8 +9,16 @@ import { EcoDiagnosisPage } from "./js/pages/eco-diagnosis-page.js";
 import { MeterReadingPage } from "./js/pages/meter-reading-page.js";
 import { ActionMenuPage } from "./js/pages/action-menu-page.js";
 import { createSyncStore } from "../ehome/sync.js";
+import { getCurrentTenant } from "../ehome/tenant.js";
 
 const { createApp, ref, computed } = Vue;
+getCurrentTenant().then((tenant) => {
+  if (!tenant) return;
+  document.title = `${tenant.name} | 毎日エコライフ`;
+  window.dailyTenantName = tenant.name;
+  const heading = document.querySelector("#tenant-heading");
+  if (heading) heading.textContent = `${tenant.name} | `;
+}).catch((error) => console.error("自治体設定の取得に失敗しました", error));
 window.ecolifeStore = await createSyncStore({
   resource: "daily",
   entries: [
@@ -290,8 +298,8 @@ const app = createApp({
   template: `
     <div>
       <header class="app-header">
-        <p class="series-name">暮らしの選択ノート</p>
-        <h1>毎日エコライフ（{{ displayDate }}）</h1>
+        <p class="series-name">エコライフノート</p>
+        <h1><span id="tenant-heading"></span>毎日エコライフ（{{ displayDate }}）</h1>
         <div class="point-summary">今日のポイント: {{ todayPoints }} / 直近2ヶ月のポイント: {{ totalPoints }}</div>
       </header>
 
@@ -331,20 +339,20 @@ const app = createApp({
       </section>
 
       <footer class="app-footer">
-        <a class="btn btn-ghost footer-link" href="../ehome/">暮らしの選択ノート</a>
+        <a class="btn btn-ghost footer-link" href="../ehome/">エコライフノート</a>
         <button type="button" class="btn btn-ghost footer-link" @click="showPrivacyPolicy = true">プライバシーポリシー</button>
         <button type="button" class="btn btn-ghost footer-link" @click="showAbout = true">このアプリについて</button>
       </footer>
 
       <div v-if="showWelcome" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
         <section class="modal-content">
-          <p class="series-name">暮らしの選択ノート</p>
+          <p class="series-name">エコライフノート</p>
           <h2 id="welcome-title">毎日エコライフへようこそ</h2>
           <p>日々の小さな行動を記録し、ポイントとして振り返るアプリです。</p>
-          <p>記録はこの端末のブラウザ内に保存されます。</p>
+          <p>記録はブラウザに保存され、同期時にCookieセッションに対応するサーバーへ保存されます。</p>
           <label class="consent-check">
             <input type="checkbox" v-model="privacyAgreed">
-            <span>暮らしの選択ノートの利用方針に同意する</span>
+            <span>エコライフノートの利用方針に同意する</span>
           </label>
           <button type="button" class="btn btn-ghost modal-policy-link" @click="showPrivacyPolicy = true">プライバシーポリシーを確認</button>
           <button type="button" class="btn btn-primary" :disabled="!privacyAgreed" @click="acceptPrivacyPolicy">はじめる</button>
@@ -353,8 +361,8 @@ const app = createApp({
 
       <div v-if="showPrivacyPolicy" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
         <section class="modal-content">
-          <h2 id="privacy-title">暮らしの選択ノートの利用方針</h2>
-          <p>このシリーズは、行動記録と設定をお使いのブラウザのlocalStorageに保存します。記録は運営者のサーバーへ送信されません。</p>
+          <h2 id="privacy-title">エコライフノートの利用方針</h2>
+          <p>このシリーズは、行動記録をブラウザに保存し、同期時にCookieセッションに対応するサーバーへ保存します。表示設定など一部の設定はブラウザに保存されます。</p>
           <p>クイズと検針票の項目を表示するため、公開APIへアクセスします。外部記録ページを開いた場合は、そのページのポリシーもご確認ください。</p>
           <button type="button" class="btn" @click="showPrivacyPolicy = false">閉じる</button>
         </section>
