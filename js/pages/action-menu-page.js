@@ -20,7 +20,7 @@ export const ActionMenuPage = {
     },
   },
   setup(props, { emit }) {
-    const store = window.localStorage;
+    const store = window.ecolifeStore;
     const todayKey = todayDateKey();
     const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
     const externalCountsAtOpen = {

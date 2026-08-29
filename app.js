@@ -8,8 +8,18 @@ import { QuizPage } from "./js/pages/quiz-page.js";
 import { EcoDiagnosisPage } from "./js/pages/eco-diagnosis-page.js";
 import { MeterReadingPage } from "./js/pages/meter-reading-page.js";
 import { ActionMenuPage } from "./js/pages/action-menu-page.js";
+import { createSyncStore } from "../ehome/sync.js";
 
 const { createApp, ref, computed } = Vue;
+window.ecolifeStore = await createSyncStore({
+  resource: "daily",
+  entries: [
+    { key: "dailyecolife_records", field: "records", fallback: {} },
+    { key: "dailyecolife_quiz", field: "quiz", fallback: {} },
+    { key: "dailyecolife_ecodiagnosis", field: "diagnosis", fallback: {} },
+    { key: "dailyecolife_meterreading", field: "meter", fallback: {} },
+  ],
+});
 
 const PAGE_COMPONENTS = {
   history: HistoryPage,
@@ -131,7 +141,7 @@ const app = createApp({
     ActionMenuPage,
   },
   setup() {
-    const store = window.localStorage;
+    const store = window.ecolifeStore;
     const todayKey = todayDateKey();
     const monthKey = todayMonthKey();
     const displayDate = todayDisplayDate();

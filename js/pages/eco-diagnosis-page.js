@@ -17,7 +17,7 @@ export const EcoDiagnosisPage = {
     },
   },
   setup(props, { emit }) {
-    const store = window.localStorage;
+    const store = window.ecolifeStore;
     const todayKey = todayDateKey();
 
     const inputItems = ref([]);
