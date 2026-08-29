@@ -1,6 +1,4 @@
 import { ACTIONS } from "../../data/actions.js";
-import { RECORDS_KEY, isActionRecorded, setActionRecorded } from "../records.js";
-import { loadJSON } from "../storage.js";
 import { getTodayDiagnosisItem, answerDiagnosis } from "../ecodiagnosis.js";
 import { fetchInputItems } from "../api.js";
 import { todayDateKey } from "../date.js";
@@ -22,24 +20,12 @@ export const EcoDiagnosisPage = {
     const store = window.localStorage;
     const todayKey = todayDateKey();
 
-    const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
     const inputItems = ref([]);
     const diagnosisItem = ref(null);
     const loadError = ref(null);
 
-    function recordsStore() {
-      return {
-        getItem: (key) => (key === RECORDS_KEY ? JSON.stringify(recordsData.value) : store.getItem(key)),
-      };
-    }
-
-    function refreshRecords() {
-      recordsData.value = loadJSON(store, RECORDS_KEY, {});
-    }
-
     function isDone() {
-      if (!diagnosisAction) return false;
-      return isActionRecorded(recordsStore(), todayKey, diagnosisAction.recordIndex);
+      return diagnosisItem.value?.answerVal !== null && diagnosisItem.value?.answerVal !== undefined;
     }
 
     async function loadDiagnosis() {
@@ -57,20 +43,19 @@ export const EcoDiagnosisPage = {
 
     function submitAnswer(val) {
       if (!diagnosisAction || !diagnosisItem.value) return;
+      const completedBeforeAnswer = isDone();
       answerDiagnosis(store, todayKey, val);
       diagnosisItem.value = { ...diagnosisItem.value, answerVal: val };
-      if (!isDone()) {
-        setActionRecorded(store, todayKey, diagnosisAction.recordIndex);
+      if (!completedBeforeAnswer) {
         emit("point-earned");
       }
-      refreshRecords();
       emit("updated");
     }
 
     watch(
       () => props.refreshTick,
       () => {
-        refreshRecords();
+        loadDiagnosis();
       }
     );
 

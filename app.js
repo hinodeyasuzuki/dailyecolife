@@ -117,18 +117,9 @@ const PAGE_TITLES = {
 const menuHistoryState = { dailyecolifePage: "menu", params: {} };
 const PRIVACY_CONSENT_KEY = "ecolife.privacyPolicyConsent";
 const PRIVACY_POLICY_VERSION = "2026-08-28";
-const LEGACY_PRIVACY_CONSENT_KEY = "dailyecolife_privacy_consent";
-const LEGACY_ECOLIFE_CONSENT_KEY = "myecoliferecords.privacyPolicyConsent";
-const LEGACY_ECOLIFE_CONSENT_VERSION = "2026-08-27";
-const LEGACY_REPAIR_CONSENT_KEY = "myrepair-privacy-consent";
 
 function hasPrivacyConsent(store) {
-  if (store.getItem(PRIVACY_CONSENT_KEY) === PRIVACY_POLICY_VERSION) return true;
-  const acceptedPreviously = store.getItem(LEGACY_PRIVACY_CONSENT_KEY) === "accepted"
-    || store.getItem(LEGACY_ECOLIFE_CONSENT_KEY) === LEGACY_ECOLIFE_CONSENT_VERSION
-    || store.getItem(LEGACY_REPAIR_CONSENT_KEY) === "accepted";
-  if (acceptedPreviously) store.setItem(PRIVACY_CONSENT_KEY, PRIVACY_POLICY_VERSION);
-  return acceptedPreviously;
+  return store.getItem(PRIVACY_CONSENT_KEY) === PRIVACY_POLICY_VERSION;
 }
 
 const app = createApp({

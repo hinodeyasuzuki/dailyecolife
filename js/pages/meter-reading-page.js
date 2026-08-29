@@ -1,9 +1,7 @@
 import { ACTIONS } from "../../data/actions.js";
-import { RECORDS_KEY, isActionRecordedInMonth } from "../records.js";
-import { loadJSON } from "../storage.js";
-import { getMonthReading, saveMonthReading, awardMeterReadingPoint } from "../meterreading.js";
+import { getMonthReading, saveMonthReading } from "../meterreading.js";
 import { fetchEnergyCodes, fetchEnergyCostCodes } from "../api.js";
-import { todayDateKey, todayMonthKey } from "../date.js";
+import { todayMonthKey } from "../date.js";
 import { actionDescription } from "../action-meta.js";
 
 const { ref, reactive, computed, watch, onMounted } = Vue;
@@ -41,7 +39,6 @@ export const MeterReadingPage = {
     const monthKey = todayMonthKey();
     const previousKey = previousMonthKey(monthKey);
 
-    const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
     const energyCodes = ref([]);
     const energyCostCodes = ref([]);
     const meterValues = reactive({});
@@ -57,16 +54,6 @@ export const MeterReadingPage = {
         cost: energyCostCodes.value.find((code) => code.code === costCode),
       })).filter((pair) => pair.energy && pair.cost)
     );
-
-    function recordsStore() {
-      return {
-        getItem: (key) => (key === RECORDS_KEY ? JSON.stringify(recordsData.value) : store.getItem(key)),
-      };
-    }
-
-    function refreshRecords() {
-      recordsData.value = loadJSON(store, RECORDS_KEY, {});
-    }
 
     function completedPairCount() {
       return METER_PAIRS.filter(({ energyCode, costCode }) =>
@@ -111,6 +98,7 @@ export const MeterReadingPage = {
 
     function saveReading() {
       if (!meterAction) return;
+      const completedBeforeSaving = isDone();
       const codes = meterPairs.value.flatMap((pair) => [pair.energy.code, pair.cost.code]);
       const values = {};
       for (const code of codes) {
@@ -126,10 +114,8 @@ export const MeterReadingPage = {
         METER_PAIRS.map((pair) => pair.energyCode),
         METER_PAIRS.map((pair) => pair.costCode)
       );
-      const recordDateKey = selectedMonthKey.value === monthKey ? todayKey : `${selectedMonthKey.value}01`;
-      const awarded = awardMeterReadingPoint(store, selectedMonthKey.value, recordDateKey, meterAction.recordIndex, result.completed);
-      if (awarded) {
-        refreshRecords();
+      Object.assign(meterValues, getMonthReading(store, selectedMonthKey.value));
+      if (result.completed && !completedBeforeSaving) {
         emit("updated");
         emit("point-earned");
       }
@@ -138,7 +124,7 @@ export const MeterReadingPage = {
     watch(
       () => props.refreshTick,
       () => {
-        refreshRecords();
+        loadMonthReading();
       }
     );
 

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { getTodayDiagnosisItem, answerDiagnosis } from "../js/ecodiagnosis.js";
+import { EXTERNAL_RECORDS_KEY } from "../js/external-records.js";
 
 function createMockStore(initial = {}) {
   const data = new Map(Object.entries(initial));
@@ -36,6 +37,9 @@ test("answerDiagnosis: 回答値を保存する", () => {
   answerDiagnosis(store, "20260826", 2);
   const result = getTodayDiagnosisItem(store, "20260826", items, () => 0.5);
   assert.equal(result.answerVal, 2);
+  assert.deepEqual(JSON.parse(store.getItem(EXTERNAL_RECORDS_KEY)), {
+    input: { i001: 2 },
+  });
 });
 
 test("answerDiagnosis: 回答済みでも値を変更できる", () => {
