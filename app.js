@@ -140,6 +140,30 @@ function hasPrivacyConsent(store) {
   return store.getItem(PRIVACY_CONSENT_KEY) === PRIVACY_POLICY_VERSION;
 }
 
+function playPointSound() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+
+  const audioContext = new AudioContextClass();
+  const gain = audioContext.createGain();
+  gain.connect(audioContext.destination);
+  gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.09, audioContext.currentTime + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.36);
+
+  [659.25, 783.99].forEach((frequency, index) => {
+    const oscillator = audioContext.createOscillator();
+    const startTime = audioContext.currentTime + index * 0.12;
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(frequency, startTime);
+    oscillator.connect(gain);
+    oscillator.start(startTime);
+    oscillator.stop(startTime + 0.18);
+  });
+
+  window.setTimeout(() => audioContext.close(), 500);
+}
+
 const app = createApp({
   components: {
     HistoryPage,
@@ -163,6 +187,7 @@ const app = createApp({
     const showPrivacyPolicy = ref(false);
     const showAbout = ref(false);
     const showPointNotice = ref(false);
+    let pointNoticeTimer;
 
     window.history.pushState(menuHistoryState, "", window.location.href);
 
@@ -177,16 +202,19 @@ const app = createApp({
     }
 
     function openPage(pageKey, params = {}) {
+      hidePointNotice();
       currentPage.value = pageKey;
       currentPageParams.value = params;
       window.history.pushState({ dailyecolifePage: pageKey, params }, "", window.location.href);
     }
 
     function backToMenu() {
+      hidePointNotice();
       window.history.back();
     }
 
     window.addEventListener("popstate", (event) => {
+      hidePointNotice();
       const state = event.state;
       if (state?.dailyecolifePage) {
         currentPage.value = state.dailyecolifePage;
@@ -206,9 +234,17 @@ const app = createApp({
       refreshRecords();
     }
 
+    function hidePointNotice() {
+      window.clearTimeout(pointNoticeTimer);
+      showPointNotice.value = false;
+    }
+
     function handlePointEarned() {
+      window.clearTimeout(pointNoticeTimer);
       showPointNotice.value = true;
+      playPointSound();
       handleUpdated();
+      pointNoticeTimer = window.setTimeout(hidePointNotice, 2000);
     }
 
     function acceptPrivacyPolicy() {
@@ -285,6 +321,7 @@ const app = createApp({
       showPrivacyPolicy,
       showAbout,
       showPointNotice,
+      hidePointNotice,
       openPage,
       backToMenu,
       handleUpdated,
@@ -378,12 +415,17 @@ const app = createApp({
         </section>
       </div>
 
-      <div v-if="showPointNotice" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="point-notice-title">
-        <section class="modal-content">
-          <h2 id="point-notice-title">ポイント取得。<br />環境の取り組みありがとうございます。</h2>
-          <button type="button" class="btn btn-primary" @click="showPointNotice = false">閉じる</button>
-        </section>
-      </div>
+      <transition name="point-earned">
+        <aside v-if="showPointNotice" class="point-notice" role="status" aria-live="polite" aria-labelledby="point-notice-title">
+          <div class="point-notice-illustration" aria-hidden="true">🌱</div>
+          <div>
+            <p class="point-notice-label">今日のエコアクション</p>
+            <h2 id="point-notice-title">+1 ポイント</h2>
+            <p class="point-notice-message">環境の取り組み、ありがとうございます。</p>
+          </div>
+          <button type="button" class="point-notice-close" aria-label="ポイント取得のお知らせを閉じる" @click="hidePointNotice">×</button>
+        </aside>
+      </transition>
     </div>
   `,
 });
