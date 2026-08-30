@@ -25,7 +25,11 @@ body {
   background:
     radial-gradient(circle at 100% 0%, #f3f8dc 0%, transparent 35%),
     radial-gradient(circle at 0% 100%, #deefe7 0%, transparent 40%),
+    radial-gradient(circle at 85% 60%, #fff0d6 0%, transparent 30%),
+    radial-gradient(circle at 15% 15%, #e6f6e0 0%, transparent 28%),
+    radial-gradient(circle, rgba(18, 122, 88, 0.07) 1.6px, transparent 1.6px) 0 0 / 26px 26px,
     var(--bg);
+  background-attachment: fixed;
   font-family: "Avenir Next", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", sans-serif;
   line-height: 1.6;
 }
@@ -40,26 +44,139 @@ body {
   margin-top: 10px;
 }
 .app-header {
+  position: relative;
+  overflow: hidden;
   margin-bottom: 14px;
-  padding: 16px;
-  border-radius: 18px;
+  padding: 20px;
+  border-radius: 24px;
   border: 1px solid var(--line);
   background: linear-gradient(145deg, #ffffff 0%, #eef8ec 100%);
   box-shadow: var(--shadow);
 }
 
+.app-header::before,
+.app-header::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.app-header::before {
+  top: -46px;
+  right: -36px;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, #ffe081 0%, #f8d56c 40%, rgba(248, 213, 108, 0) 72%);
+  opacity: 0.55;
+}
+
+.app-header::after {
+  bottom: -56px;
+  left: -30px;
+  width: 130px;
+  height: 130px;
+  background: radial-gradient(circle, #9fe0b8 0%, #bce9cd 45%, rgba(159, 224, 184, 0) 72%);
+  opacity: 0.5;
+}
+
 .app-header h1 {
+  position: relative;
   margin: 0;
-  letter-spacing: 0.03em;
-  font-size: clamp(1.45rem, 2.6vw, 1.95rem);
+  letter-spacing: 0.02em;
+  font-size: clamp(1.5rem, 2.8vw, 2rem);
 }
 
 .series-name {
-  margin: 0 0 3px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 8px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #ffffffb0;
   color: var(--accent-strong);
   font-size: 0.78rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
+}
+
+.point-stats {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.point-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 16px;
+}
+
+.point-stat-today {
+  padding: 10px 18px 10px 12px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+  box-shadow: 0 16px 26px -18px rgba(12, 96, 69, 0.65);
+}
+
+.point-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+  font-size: 1.3rem;
+}
+
+.point-stat-text {
+  display: grid;
+  gap: 1px;
+}
+
+.point-stat-today .point-stat-label {
+  color: #eafff2;
+}
+
+.point-stat-today .point-stat-value {
+  color: #ffffff;
+  font-size: 1.7rem;
+}
+
+.point-stat-range {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+  padding: 8px 16px;
+  background: #ffffffb0;
+  border: 1px solid var(--line);
+}
+
+.point-stat-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.point-stat-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--accent-strong);
+  line-height: 1.15;
+}
+
+.point-stat-unit {
+  margin-left: 2px;
+  font-size: 0.68em;
+  font-weight: 700;
+  opacity: 0.85;
 }
 
 .point-summary {
@@ -643,5 +760,17 @@ input:focus-visible {
   .detail-panel,
   .action-card {
     border-radius: 14px;
+  }
+
+  .point-stats {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .point-stat-range {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 8px;
   }
 }

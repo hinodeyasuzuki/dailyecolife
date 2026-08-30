@@ -352,9 +352,21 @@ const app = createApp({
   template: `
     <div>
       <header class="app-header">
-        <p class="series-name">エコライフノート</p>
+        <p class="series-name">🌿 エコライフノート</p>
         <h1><span id="tenant-heading"></span>毎日エコライフ（{{ displayDate }}）</h1>
-        <div class="point-summary">今日のポイント: {{ todayPoints }} / 直近2ヶ月のポイント: {{ totalPoints }}</div>
+        <div class="point-stats">
+          <div class="point-stat point-stat-today">
+            <span class="point-stat-icon" aria-hidden="true">🌱</span>
+            <div class="point-stat-text">
+              <span class="point-stat-label">今日のポイント</span>
+              <span class="point-stat-value">{{ todayPoints }}<span class="point-stat-unit">pt</span></span>
+            </div>
+          </div>
+          <div class="point-stat point-stat-range">
+            <span class="point-stat-label">直近2ヶ月</span>
+            <span class="point-stat-value">{{ totalPoints }}<span class="point-stat-unit">pt</span></span>
+          </div>
+        </div>
       </header>
 
       <section v-if="currentPage === 'menu'" class="menu-screen">
