@@ -342,7 +342,9 @@ input:focus-visible {
   color: var(--muted);
 }
 
-.form-field input {
+.form-field input,
+.form-field select,
+.form-field textarea {
   width: 100%;
   min-height: 42px;
   padding: 8px 10px;
@@ -350,6 +352,56 @@ input:focus-visible {
   border: 1px solid var(--line);
   background: #fff;
   font-size: 1rem;
+  font-family: inherit;
+}
+
+.form-field textarea {
+  resize: vertical;
+}
+
+.equip-suggestion-note {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.entry-list {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+}
+
+.entry-list-title {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.entry-item {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #f8fbf6;
+}
+
+.entry-item-name {
+  margin: 0;
+  font-weight: 700;
+  color: #204131;
+}
+
+.entry-item-meta {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.entry-item-memo {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
 }
 
 .history-calendar {

@@ -142,7 +142,7 @@ function hasPrivacyConsent(store) {
 }
 
 function playPointSound() {
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  const AudioContextClass = window.AudioContext3Dメッシュデータをpng形3Dメッシュデータをpng形式で圧縮することはできるか式で圧縮することはできるか || window.webkitAudioContext;
   if (!AudioContextClass) return;
 
   const audioContext = new AudioContextClass();
