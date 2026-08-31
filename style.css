@@ -52,6 +52,7 @@ body {
   border: 1px solid var(--line);
   background: linear-gradient(145deg, #ffffff 0%, #eef8ec 100%);
   box-shadow: var(--shadow);
+  cursor: pointer;
 }
 
 .app-header::before,
@@ -100,6 +101,8 @@ body {
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .point-stats {
@@ -156,6 +159,7 @@ body {
   padding: 8px 16px;
   background: #ffffffb0;
   border: 1px solid var(--line);
+  cursor: pointer;
 }
 
 .point-stat-label {
