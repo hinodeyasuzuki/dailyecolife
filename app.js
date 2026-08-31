@@ -11,6 +11,7 @@ import { MeterReadingPage } from "./js/pages/meter-reading-page.js";
 import { ActionMenuPage } from "./js/pages/action-menu-page.js";
 import { createSyncStore } from "../ehome/sync.js";
 import { getCurrentTenant } from "../ehome/common/tenant.js";
+import { PRIVACY_POLICY_HTML, hasPrivacyConsent, recordConsent } from "../ehome/common/privacy.js";
 
 const { createApp, ref, computed } = Vue;
 getCurrentTenant().then((tenant) => {
@@ -134,12 +135,6 @@ const PAGE_TITLES = {
 };
 
 const menuHistoryState = { dailyecolifePage: "menu", params: {} };
-const PRIVACY_CONSENT_KEY = "ecolife.privacyPolicyConsent";
-const PRIVACY_POLICY_VERSION = "2026-08-28";
-
-function hasPrivacyConsent(store) {
-  return store.getItem(PRIVACY_CONSENT_KEY) === PRIVACY_POLICY_VERSION;
-}
 
 function playPointSound() {
   const AudioContextClass = window.AudioContext3Dメッシュデータをpng形3Dメッシュデータをpng形式で圧縮することはできるか式で圧縮することはできるか || window.webkitAudioContext;
@@ -250,7 +245,7 @@ const app = createApp({
 
     function acceptPrivacyPolicy() {
       if (!privacyAgreed.value) return;
-      store.setItem(PRIVACY_CONSENT_KEY, PRIVACY_POLICY_VERSION);
+      recordConsent(store);
       showWelcome.value = false;
     }
 
@@ -334,6 +329,7 @@ const app = createApp({
       showWelcome,
       privacyAgreed,
       showPrivacyPolicy,
+      privacyPolicyHtml: PRIVACY_POLICY_HTML,
       showAbout,
       showPointNotice,
       hidePointNotice,
@@ -429,8 +425,7 @@ const app = createApp({
       <div v-if="showPrivacyPolicy" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
         <section class="modal-content">
           <h2 id="privacy-title">エコライフノートの利用方針</h2>
-          <p>このシリーズは、行動記録をブラウザに保存し、同期時にCookieセッションに対応するサーバーへ保存します。表示設定など一部の設定はブラウザに保存されます。</p>
-          <p>クイズと検針票の項目を表示するため、公開APIへアクセスします。外部記録ページを開いた場合は、そのページのポリシーもご確認ください。</p>
+          <div v-html="privacyPolicyHtml"></div>
           <button type="button" class="btn" @click="showPrivacyPolicy = false">閉じる</button>
         </section>
       </div>
