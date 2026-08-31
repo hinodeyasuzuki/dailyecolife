@@ -10,29 +10,38 @@ function loadAllQuiz(store) {
   return loadJSON(store, QUIZ_KEY, {});
 }
 
-export async function getTodayQuiz(store, dateKey, fetchFn) {
-  const all = loadAllQuiz(store);
-  if (all[dateKey]) {
-    return all[dateKey];
-  }
-  const response = await fetchFn(QUIZ_API_URL);
+async function fetchQuiz(fetchFn, id) {
+  const url = id ? `${QUIZ_API_URL}?id=${encodeURIComponent(id)}` : QUIZ_API_URL;
+  const response = await fetchFn(url);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
   }
-  const question = await response.json();
-  const entry = { question, answeredOption: null, correct: null };
-  all[dateKey] = entry;
-  saveJSON(store, QUIZ_KEY, all);
-  return entry;
+  return response.json();
 }
 
-export function answerQuiz(store, dateKey, optionIndex) {
+// 保存(同期ログ)には問題文・選択肢を残さず、quizIdと回答結果だけを記録する。
+// 再表示時はquizIdでAPIから問題文を都度取得する。
+export async function getTodayQuiz(store, dateKey, fetchFn) {
+  const all = loadAllQuiz(store);
+  let entry = all[dateKey];
+  if (!entry) {
+    const question = await fetchQuiz(fetchFn);
+    entry = { quizId: question.id, answeredOption: null, correct: null };
+    all[dateKey] = entry;
+    saveJSON(store, QUIZ_KEY, all);
+    return { question, answeredOption: entry.answeredOption, correct: entry.correct };
+  }
+  const question = await fetchQuiz(fetchFn, entry.quizId);
+  return { question, answeredOption: entry.answeredOption, correct: entry.correct };
+}
+
+export function answerQuiz(store, dateKey, optionIndex, correct) {
   const all = loadAllQuiz(store);
   const entry = all[dateKey];
+  if (!entry) return { correct: false };
   if (entry.answeredOption !== null) {
     return { correct: entry.correct };
   }
-  const correct = entry.question.answer === optionIndex;
   entry.answeredOption = optionIndex;
   entry.correct = correct;
   saveJSON(store, QUIZ_KEY, all);

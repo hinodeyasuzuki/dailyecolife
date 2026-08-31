@@ -60,7 +60,8 @@ export const QuizPage = {
 
     function submitAnswer(optionIndex) {
       if (!quizAction || !quiz.value || quiz.value.answeredOption !== null) return;
-      const result = answerQuiz(store, todayKey, optionIndex);
+      const correct = quiz.value.question.answer === optionIndex;
+      const result = answerQuiz(store, todayKey, optionIndex, correct);
       quiz.value = { ...quiz.value, answeredOption: optionIndex, correct: result.correct };
       if (result.correct) {
         setActionRecorded(store, todayKey, quizAction.recordIndex);
