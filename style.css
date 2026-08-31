@@ -43,6 +43,12 @@ body {
 .mt-10 {
   margin-top: 10px;
 }
+.right {
+  text-align: right;
+}
+.w100 {
+  width: 100%;
+}
 .app-header {
   position: relative;
   overflow: hidden;
@@ -465,7 +471,8 @@ input:focus-visible {
 
 .form-field input,
 .form-field select,
-.form-field textarea {
+.form-field textarea,
+.history-note-select {
   width: 100%;
   min-height: 42px;
   padding: 8px 10px;
@@ -560,6 +567,75 @@ input:focus-visible {
 
 .history-day.empty-day {
   visibility: hidden;
+}
+
+.history-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.history-month-label {
+  margin: 0;
+  font-weight: 800;
+}
+
+.history-action-table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.history-action-table th,
+.history-action-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.history-action-table td:last-child,
+.history-action-table th:last-child {
+  text-align: right;
+}
+
+.history-section-title {
+  margin: 20px 0 8px;
+  font-size: 0.95rem;
+  color: var(--accent-strong);
+}
+
+.history-trend {
+  width: 100%;
+  height: auto;
+}
+
+.history-trend-tick {
+  font-size: 10px;
+  fill: var(--muted);
+  text-anchor: middle;
+}
+
+.history-trend-gridline {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.history-trend-ytick {
+  font-size: 10px;
+  fill: var(--muted);
+  text-anchor: end;
+}
+
+.history-trend-axis-title {
+  font-size: 10px;
+  fill: var(--muted);
+  text-anchor: middle;
+}
+
+.history-note-select {
+  margin-bottom: 10px;
 }
 
 .load-error {

@@ -100,7 +100,7 @@ export const QuizPage = {
         <h2>{{ quizAction.label }}</h2>
         <p class="detail-description">今日の1問にチャレンジして、楽しくエコ知識をアップしよう。</p>
         <p class="detail-achievement" :class="{done: isDone()}">
-          {{ isDone() ? '本日の問題は回答済みです。' : '本日の問題です。気軽に1つ選んでください。' }}
+          {{ isDone() ? '本日の問題は回答済みです。' : '本日の問題です。よく考えて選んでください。' }}
         </p>
 
         <div class="detail-body">

@@ -1,5 +1,6 @@
 import { ACTIONS } from "../../data/actions.js";
 import { RECORDS_KEY, isActionRecorded, setActionRecorded } from "../records.js";
+import { getActionNote, setActionNote } from "../action-notes.js";
 import { loadJSON } from "../storage.js";
 import { todayDateKey } from "../date.js";
 import { actionDescription } from "../action-meta.js";
@@ -28,6 +29,7 @@ function emptyFormState() {
     year: "",
     repairer: "",
     about: "",
+    note: "",
   };
 }
 
@@ -48,6 +50,7 @@ export const ActionMenuPage = {
     const todayKey = todayDateKey();
     const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
     const viewedInfo = ref(false);
+    const actionNotesTick = ref(0);
 
     const equipItems = ref([]);
     const equipError = ref(null);
@@ -109,6 +112,25 @@ export const ActionMenuPage = {
       refreshRecords();
       emit("updated");
       emit("point-earned");
+    }
+
+    function markDoneWithNote(action) {
+      if (isDone(action)) return;
+      const note = (forms[action.id]?.note ?? "").trim();
+      if (note) {
+        setActionNote(store, todayKey, action.id, note);
+        refreshActionNotes();
+      }
+      markDone(action);
+    }
+
+    function refreshActionNotes() {
+      actionNotesTick.value += 1;
+    }
+
+    function actionNote(actionId) {
+      void actionNotesTick.value;
+      return getActionNote(store, todayKey, actionId);
     }
 
     function openInfo(action) {
@@ -218,14 +240,23 @@ export const ActionMenuPage = {
       return entry.year ? `${entry.year}年` : "修理年不明";
     }
 
+    function achievementText(action) {
+      if (isDone(action)) return '本日達成できました。';
+      if (isInfoMode.value) return 'まだ達成できていません。';
+      if (isExternalMode.value) return 'まだ達成できていません。';
+      return '１日振り返ってみて、できましたか？';
+    }
     watch(
       pageActions,
       (actions) => {
         for (const action of actions) {
-          if (action.type !== "external") continue;
-          ensureForm(action.id);
-          refreshEntries(action.id);
-          ensureEquipItems();
+          if (action.type === "external") {
+            ensureForm(action.id);
+            refreshEntries(action.id);
+            ensureEquipItems();
+          } else if (action.type === "simple") {
+            ensureForm(action.id);
+          }
         }
       },
       { immediate: true }
@@ -247,6 +278,9 @@ export const ActionMenuPage = {
       pageActions,
       isDone,
       markDone,
+      markDoneWithNote,
+      actionNote,
+      achievementText,
       viewedInfo,
       openInfo,
       infoOpenLabel,
@@ -275,7 +309,7 @@ export const ActionMenuPage = {
           <h2>{{ action.label }}</h2>
           <p class="detail-description">{{ actionDescription(action) }}</p>
           <p class="detail-achievement" :class="{done: isDone(action)}">
-            {{ isDone(action) ? '本日達成できました。' : 'まだ達成できていません。' }}
+            {{ achievementText(action) }}
           </p>
 
           <div class="detail-body" v-if="isExternalMode && action.id === 'secondhand' && forms[action.id]">
@@ -379,13 +413,22 @@ export const ActionMenuPage = {
             </div>
           </div>
 
+          <!--情報確認-->
           <div class="detail-body" v-else-if="isInfoMode">
             <button type="button" class="btn" @click="openInfo(action)">{{ infoOpenLabel(action) }}</button>
             <button v-if="!isDone(action)" type="button" class="btn btn-primary" :disabled="!viewedInfo" @click="markDone(action)">{{ infoReadLabel(action) }}</button>
           </div>
 
+          <!--振り返り-->
           <div class="detail-body" v-else>
-            <button v-if="!isDone(action)" class="btn btn-primary" @click="markDone(action)">本日（前回の記入以降）できた</button>
+            <template v-if="!isDone(action)">
+              <div class="form-field" v-if="forms[action.id]">
+                <label>概要(任意)</label>
+                <input type="text" v-model="forms[action.id].note" maxlength="80" placeholder="">
+              </div>
+              <button class="btn btn-primary" @click="markDoneWithNote(action)">本日（前回の記入以降）できた</button>
+            </template>
+            <p v-else-if="actionNote(action.id)" class="entry-item-memo">{{ actionNote(action.id) }}</p>
           </div>
         </article>
       </div>

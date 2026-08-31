@@ -28,6 +28,7 @@ window.ecolifeStore = await createSyncStore({
     { key: "dailyecolife_quiz", field: "quiz", fallback: {} },
     { key: "dailyecolife_ecodiagnosis", field: "diagnosis", fallback: {} },
     { key: "dailyecolife_meterreading", field: "meter", fallback: {} },
+    { key: "dailyecolife_actionnotes", field: "actionNotes", fallback: {} },
   ],
 });
 
@@ -359,7 +360,7 @@ const app = createApp({
             </div>
           </div>
           <div class="point-stat point-stat-range" @click.stop="openPage('history')">
-            <span class="point-stat-label">直近2ヶ月</span>
+            <span class="point-stat-label">直近60日間</span>
             <span class="point-stat-value">{{ totalPoints }}<span class="point-stat-unit">pt</span></span>
           </div>
         </div>
