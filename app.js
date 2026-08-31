@@ -10,7 +10,7 @@ import { EcoDiagnosisPage } from "./js/pages/eco-diagnosis-page.js";
 import { MeterReadingPage } from "./js/pages/meter-reading-page.js";
 import { ActionMenuPage } from "./js/pages/action-menu-page.js";
 import { createSyncStore } from "../ehome/sync.js";
-import { getCurrentTenant } from "../ehome/tenant.js";
+import { getCurrentTenant } from "../ehome/common/tenant.js";
 
 const { createApp, ref, computed } = Vue;
 getCurrentTenant().then((tenant) => {
