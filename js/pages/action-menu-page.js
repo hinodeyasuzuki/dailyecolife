@@ -5,7 +5,7 @@ import { loadJSON } from "../storage.js";
 import { todayDateKey } from "../date.js";
 import { actionDescription } from "../action-meta.js";
 import { fetchEquipItems } from "../api.js";
-import { guessEquipItem, equipTitle } from "../../../ehome/common/equip-guess.js";
+import { guessEquipItem, equipTitle } from "../../common/equip-guess.js";
 import { listSecondhandProducts, listRepairLogs, addSecondhandProduct, addRepairLog } from "../external-input.js";
 import { REPAIRER_OPTIONS } from "../repairer-options.js";
 

@@ -9,9 +9,9 @@ import { QuizPage } from "./js/pages/quiz-page.js";
 import { EcoDiagnosisPage } from "./js/pages/eco-diagnosis-page.js";
 import { MeterReadingPage } from "./js/pages/meter-reading-page.js";
 import { ActionMenuPage } from "./js/pages/action-menu-page.js";
-import { createSyncStore } from "../ehome/sync.js";
-import { getCurrentTenant } from "../ehome/common/tenant.js";
-import { PRIVACY_POLICY_HTML, hasPrivacyConsent, recordConsent } from "../ehome/common/privacy.js";
+import { createSyncStore } from "./common/sync.js";
+import { getCurrentTenant } from "./common/tenant.js";
+import { PRIVACY_POLICY_HTML, hasPrivacyConsent, recordConsent } from "./common/privacy.js";
 
 const { createApp, ref, computed } = Vue;
 getCurrentTenant().then((tenant) => {
