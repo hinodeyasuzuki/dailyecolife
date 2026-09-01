@@ -2,12 +2,7 @@ const DEFAULT_API_URL = new URL("../api/mysql-api.php", import.meta.url).href;
 const DEFAULT_TIMEOUT = 10000;
 
 export async function initializeSession(apiUrl = DEFAULT_API_URL) {
-  const response = await fetch(`${apiUrl}?resource=ecolife&meta=1`, {
-    credentials: "same-origin",
-    headers: { Accept: "application/json" },
-  });
-  if (!response.ok) throw new Error(`API ${response.status}`);
-  return response.json();
+  return {};
 }
 
 function readJson(storage, key, fallback) {
@@ -25,21 +20,7 @@ function writeJson(storage, key, value) {
 }
 
 async function request(apiUrl, resource, options = {}) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), options.timeout ?? DEFAULT_TIMEOUT);
-  const { timeout, query, ...fetchOptions } = options;
-  try {
-    const queryString = query ? `&${query}` : "";
-    const response = await fetch(`${apiUrl}?resource=${encodeURIComponent(resource)}${queryString}`, {
-      credentials: "same-origin",
-      ...fetchOptions,
-      signal: controller.signal,
-    });
-    if (!response.ok) throw new Error(`API ${response.status}`);
-    return response.json();
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  return {};
 }
 
 function metadataKey(storageKey) {
@@ -89,48 +70,11 @@ export async function createSyncStore({
   }
 
   async function sync({ keepalive = false } = {}) {
-    if (syncing) return syncing;
-    const body = JSON.stringify(payload());
-    syncing = fetch(`${apiUrl}?resource=${encodeURIComponent(resource)}`, {
-      method: "PUT",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body,
-      keepalive,
-    }).then(async (response) => {
-      if (!response.ok) throw new Error(`API ${response.status}`);
-      const result = await response.json();
-      meta.dirty = false;
-      meta.serverUpdatedAt = result.updatedAt ?? new Date().toISOString();
-      writeJson(storage, syncKey, meta);
-      return result;
-    }).finally(() => {
-      syncing = null;
-    });
-    return syncing;
+    return {};
   }
 
   async function initialize() {
-    try {
-      const remote = await fetchMeta();
-      const remoteUpdatedAt = remote.updatedAt ?? null;
-      const hasLocal = entries.some((entry) => storage.getItem(entry.key) !== null);
-      const shouldUpload = meta.dirty && hasLocal;
-      const shouldDownload = !shouldUpload && remote.exists &&
-        (!hasLocal || !meta.serverUpdatedAt || (remoteUpdatedAt && remoteUpdatedAt > meta.serverUpdatedAt));
-      if (shouldUpload) {
-        await sync();
-      } else if (shouldDownload) {
-        const remoteData = (await request(apiUrl, resource)).data;
-        applyRemote(remoteData);
-        meta.serverUpdatedAt = remoteUpdatedAt;
-        meta.dirty = false;
-        writeJson(storage, syncKey, meta);
-      }
-    } catch (error) {
-      console.error(`同期確認に失敗しました: ${resource}`, error);
-    }
-    return controller;
+    return {};
   }
 
   function setItem(key, value) {
