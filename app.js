@@ -349,7 +349,7 @@ const app = createApp({
   template: `
     <div>
       <header class="app-header" @click="currentPage !== 'menu' && backToMenu()">
-        <a class="series-name" href="../ehome/" @click.stop>🌿 エコライフ手帖</a>
+        🌿 エコライフ手帖
         <h1><span id="tenant-heading"></span>毎日エコライフ（{{ displayDate }}）</h1>
         <div class="point-stats">
           <div class="point-stat point-stat-today">
@@ -403,7 +403,7 @@ const app = createApp({
       </section>
 
       <footer class="app-footer">
-        <a class="btn btn-ghost footer-link" href="../ehome/">エコライフ手帖</a>
+        エコライフ手帖
         <button type="button" class="btn btn-ghost footer-link" @click="showPrivacyPolicy = true">プライバシーポリシー</button>
         <button type="button" class="btn btn-ghost footer-link" @click="showAbout = true">このアプリについて</button>
       </footer>
