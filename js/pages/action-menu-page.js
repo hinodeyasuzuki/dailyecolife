@@ -312,6 +312,7 @@ export const ActionMenuPage = {
             {{ achievementText(action) }}
           </p>
 
+          <!--中古-->
           <div class="detail-body" v-if="isExternalMode && action.id === 'secondhand' && forms[action.id]">
             <div class="form-field">
               <label>製品名</label>
@@ -363,6 +364,7 @@ export const ActionMenuPage = {
             </div>
           </div>
 
+          <!--修理-->
           <div class="detail-body" v-else-if="isExternalMode && action.id === 'repair' && forms[action.id]">
             <div class="form-field">
               <label>製品名</label>
