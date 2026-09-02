@@ -47,6 +47,9 @@ body {
 .mt-10 {
   margin-top: 10px;
 }
+.center {
+  text-align: center;
+}
 .right {
   text-align: right;
 }
@@ -355,7 +358,7 @@ input:focus-visible {
 }
 
 .detail-body {
-  margin-top: 14px;
+  margin-top: 40px;
   display: grid;
   gap: 10px;
 }
@@ -675,6 +678,9 @@ input:focus-visible {
   font-size: 0.82rem;
   color: var(--muted);
 }
+.footer-text {
+  font-size: 0.82rem;
+}
 
 .modal-backdrop {
   position: fixed;
@@ -688,6 +694,8 @@ input:focus-visible {
 
 .modal-content {
   width: min(100%, 480px);
+  max-height: calc(100vh - 36px);
+  overflow-y: auto;
   display: grid;
   gap: 14px;
   padding: 22px;
@@ -695,6 +703,7 @@ input:focus-visible {
   border-radius: 8px;
   background: var(--card);
   box-shadow: var(--shadow);
+  font-size:80%;
 }
 
 .modal-content h2,
@@ -857,5 +866,8 @@ input:focus-visible {
     align-items: baseline;
     justify-content: flex-start;
     gap: 8px;
+  }
+  .footer-text {
+    display: none;
   }
 }

@@ -98,6 +98,7 @@ export const EcoDiagnosisPage = {
         <p class="detail-achievement" :class="{done: isDone()}">
           {{ isDone() ? '本日記入済みです。' : '記入してください。' }}
         </p>
+        <p class="center">いままでの入力は<a href="../myecoliferecords/?page=input">Myエコライフ記録</a>で確認できます。</p>
 
         <div class="detail-body">
           <div v-if="loadError" class="load-error">

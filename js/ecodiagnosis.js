@@ -13,7 +13,7 @@ function loadSavedInput(store) {
 
 //除外して1問ずつ尋ねる
 const EXCLUDED_CONS = new Set(["consSeason", "consHTcold"]);
-const EXCLUDED_TITLES = new Set(["ホームタンクの容量", "灯油ホームタンク回数"]);
+const EXCLUDED_TITLES = new Set(["詳細地域","ホームタンクの容量", "灯油ホームタンク回数"]);
 
 function pickNextItem(allItems, savedInput, randomFn) {
   const eligible = allItems.filter((i) => !EXCLUDED_CONS.has(i.cons) && !EXCLUDED_TITLES.has(i.title));

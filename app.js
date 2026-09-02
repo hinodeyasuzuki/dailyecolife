@@ -403,7 +403,7 @@ const app = createApp({
       </section>
 
       <footer class="app-footer">
-        <a class="btn btn-ghost footer-link" href="../ehome/">エコライフ手帖</a>
+        <a class="btn btn-ghost footer-link" href="../ehome/">エコライフ手帖</a><span class="footer-text"> | 毎日エコライフ</span>
         <button type="button" class="btn btn-ghost footer-link" @click="showPrivacyPolicy = true">プライバシーポリシー</button>
         <button type="button" class="btn btn-ghost footer-link" @click="showAbout = true">このアプリについて</button>
       </footer>
