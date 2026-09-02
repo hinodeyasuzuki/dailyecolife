@@ -52,7 +52,7 @@ const METER_PAIRS = [
 
 const MENU_ITEMS = [
   { key: "quiz", title: "環境クイズ", actionId: "quiz" },
-  { key: "diagnosis", title: "今日のエコ診断", actionId: "ecocheck" },
+  { key: "diagnosis", title: "エコ診断のもと", actionId: "ecocheck" },
   {
     key: "actionMenu",
     title: "今日の省エネのヒント",
@@ -64,12 +64,6 @@ const MENU_ITEMS = [
     title: "今日の修理のヒント",
     actionId: "repairhint",
     params: { actionId: "repairhint", title: "修理のヒント" },
-  },
-  {
-    key: "actionMenu",
-    title: "ニュースで環境情報収集",
-    actionId: "news",
-    params: { actionId: "news", title: "ニュースで環境情報収集" },
   },
   {
     key: "actionMenu",
@@ -103,6 +97,12 @@ const MENU_ITEMS = [
   },
   {
     key: "actionMenu",
+    title: "ニュースで環境情報収集",
+    actionId: "news",
+    params: { actionId: "news", title: "ニュースで環境情報収集" },
+  },
+  {
+    key: "actionMenu",
     title: "環境のお話",
     actionId: "talk",
     params: { actionId: "talk", title: "環境のお話" },
@@ -123,9 +123,9 @@ const MENU_ITEMS = [
 ];
 
 const MENU_SECTIONS = [
-  { id: "information", title: "情報", items: MENU_ITEMS.slice(0, 5) },
-  { id: "daily", title: "今日の取り組み", items: MENU_ITEMS.slice(5, 11) },
-  { id: "occasional", title: "時々の取り組み", items: MENU_ITEMS.slice(11) },
+  { id: "information", title: "情報チェック", items: MENU_ITEMS.slice(0, 4) },
+  { id: "daily", title: "今日の取り組み", items: MENU_ITEMS.slice(4, 11) },
+  { id: "occasional", title: "チャレンジのチャンス", items: MENU_ITEMS.slice(11) },
 ];
 
 const PAGE_TITLES = {
