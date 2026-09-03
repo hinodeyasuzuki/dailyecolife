@@ -444,6 +444,28 @@ export const ActionMenuPage = {
               <label>概要(商品の概要、経緯など)</label>
               <textarea v-model="forms[action.id].memory" rows="3"></textarea>
             </div>
+            <div class="form-field photo-field">
+              <label>写真(最大{{ MAX_PICTURES }}枚)</label>
+              <div class="photo-picker">
+                <label class="btn photo-picker-btn">
+                  撮影する
+                  <input type="file" accept="image/*" capture="environment" class="photo-input"
+                    :disabled="forms[action.id].pictures.length >= MAX_PICTURES"
+                    @change="onPhotoInput(action.id, $event)">
+                </label>
+                <label class="btn photo-picker-btn">
+                  アルバムから選択
+                  <input type="file" accept="image/*" multiple class="photo-input"
+                    :disabled="forms[action.id].pictures.length >= MAX_PICTURES"
+                    @change="onPhotoInput(action.id, $event)">
+                </label>
+              </div>
+              <p v-if="forms[action.id].pictures.length >= MAX_PICTURES" class="equip-suggestion-note">写真は{{ MAX_PICTURES }}枚まで登録できます。</p>
+              <p v-if="forms[action.id].photoError" class="equip-suggestion-note">{{ forms[action.id].photoError }}</p>
+              <div class="photo-thumb-list" v-if="forms[action.id].pictures.length">
+                <img v-for="pic in forms[action.id].pictures" :key="pic.pid" :src="pic.dataUrl" class="photo-thumb" alt="登録する写真">
+              </div>
+            </div>
             <button type="button" class="btn btn-primary" :disabled="!forms[action.id].name.trim()" @click="saveSecondhand(action)">記録を追加</button>
 
             <div class="entry-list" v-if="entryLists[action.id] && entryLists[action.id].length">
@@ -452,6 +474,11 @@ export const ActionMenuPage = {
                 <p class="entry-item-name">{{ entry.name }}</p>
                 <p class="entry-item-meta">{{ equipLabel(entry.equip_id) || '未分類' }} ・ {{ purchaseDateLabel(entry) }}</p>
                 <p class="entry-item-memo" v-if="entry.memory">{{ entry.memory }}</p>
+                <div class="photo-thumb-list" v-if="entry.picture_ids && entry.picture_ids.length">
+                  <template v-for="pid in entry.picture_ids" :key="pid">
+                    <img v-if="pictureThumbs[pid]" :src="pictureThumbs[pid]" class="photo-thumb" alt="登録された写真">
+                  </template>
+                </div>
               </div>
             </div>
           </div>
@@ -495,6 +522,28 @@ export const ActionMenuPage = {
               <label>概要(修理前の状態、修理した方法)</label>
               <textarea v-model="forms[action.id].about" rows="3"></textarea>
             </div>
+            <div class="form-field photo-field">
+              <label>写真(最大{{ MAX_PICTURES }}枚)</label>
+              <div class="photo-picker">
+                <label class="btn photo-picker-btn">
+                  撮影する
+                  <input type="file" accept="image/*" capture="environment" class="photo-input"
+                    :disabled="forms[action.id].pictures.length >= MAX_PICTURES"
+                    @change="onPhotoInput(action.id, $event)">
+                </label>
+                <label class="btn photo-picker-btn">
+                  アルバムから選択
+                  <input type="file" accept="image/*" multiple class="photo-input"
+                    :disabled="forms[action.id].pictures.length >= MAX_PICTURES"
+                    @change="onPhotoInput(action.id, $event)">
+                </label>
+              </div>
+              <p v-if="forms[action.id].pictures.length >= MAX_PICTURES" class="equip-suggestion-note">写真は{{ MAX_PICTURES }}枚まで登録できます。</p>
+              <p v-if="forms[action.id].photoError" class="equip-suggestion-note">{{ forms[action.id].photoError }}</p>
+              <div class="photo-thumb-list" v-if="forms[action.id].pictures.length">
+                <img v-for="pic in forms[action.id].pictures" :key="pic.pid" :src="pic.dataUrl" class="photo-thumb" alt="登録する写真">
+              </div>
+            </div>
             <button type="button" class="btn btn-primary" :disabled="!forms[action.id].name.trim()" @click="saveRepair(action)">記録を追加</button>
 
             <div class="entry-list" v-if="entryLists[action.id] && entryLists[action.id].length">
@@ -503,6 +552,11 @@ export const ActionMenuPage = {
                 <p class="entry-item-name">{{ entry.productName }}</p>
                 <p class="entry-item-meta">{{ repairDateLabel(entry) }}{{ entry.repairerLabel ? ' ・ ' + entry.repairerLabel : '' }}</p>
                 <p class="entry-item-memo" v-if="entry.about">{{ entry.about }}</p>
+                <div class="photo-thumb-list" v-if="entry.picture_ids && entry.picture_ids.length">
+                  <template v-for="pid in entry.picture_ids" :key="pid">
+                    <img v-if="pictureThumbs[pid]" :src="pictureThumbs[pid]" class="photo-thumb" alt="登録された写真">
+                  </template>
+                </div>
               </div>
             </div>
           </div>
