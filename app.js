@@ -1,5 +1,6 @@
 import { ACTIONS } from "./data/actions.js";
 import { RECORDS_KEY, countPointsForDay, isActionRecorded } from "./js/records.js";
+import { EXTERNAL_RECORDS_KEY } from "./js/external-records.js";
 import { loadJSON } from "./js/storage.js";
 import { isQuizAnswered } from "./js/quiz.js";
 import { getMonthReading } from "./js/meterreading.js";
@@ -30,6 +31,11 @@ window.ecolifeStore = await createSyncStore({
     { key: "dailyecolife_meterreading", field: "meter", fallback: {} },
     { key: "dailyecolife_actionnotes", field: "actionNotes", fallback: {} },
   ],
+});
+
+window.externalRecordsStore = await createSyncStore({
+  resource: "ecolife",
+  entries: [{ key: EXTERNAL_RECORDS_KEY, field: null, fallback: {} }],
 });
 
 const PAGE_COMPONENTS = {
