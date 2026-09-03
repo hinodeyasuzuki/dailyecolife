@@ -2,11 +2,22 @@ import { ACTIONS } from "../../data/actions.js";
 import { RECORDS_KEY, isActionRecorded, setActionRecorded } from "../records.js";
 import { getActionNote, setActionNote } from "../action-notes.js";
 import { loadJSON } from "../storage.js";
+import { EXTERNAL_RECORDS_KEY } from "../external-records.js";
 import { todayDateKey } from "../date.js";
 import { actionDescription } from "../action-meta.js";
 import { fetchEquipItems } from "../api.js";
 import { guessEquipItem, equipTitle } from "../../../ehome/common/equip-guess.js";
-import { listSecondhandProducts, listRepairLogs, addSecondhandProduct, addRepairLog } from "../external-input.js";
+import {
+  listSecondhandProducts,
+  listRepairLogs,
+  addSecondhandProduct,
+  addRepairLog,
+  attachPicturesToProduct,
+  attachPicturesToRepairLog,
+} from "../external-input.js";
+import { compressImageFile } from "../image.js";
+import { generatePictureId, putPictureBlob, getPictureBlob } from "../pictureStore.js";
+import { putPhoto, fetchPhotoAsDataUrl, listServerPhotoIds } from "../photoApi.js";
 import { REPAIRER_OPTIONS } from "../repairer-options.js";
 
 const { ref, reactive, computed, watch, onMounted } = Vue;
@@ -16,6 +27,8 @@ const PURCHASE_MONTH_OPTIONS = [
   { value: 0, label: "月は不明" },
   ...Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: `${i + 1}月` })),
 ];
+
+const MAX_PICTURES = 5;
 
 function emptyFormState() {
   return {
@@ -30,6 +43,8 @@ function emptyFormState() {
     repairer: "",
     about: "",
     note: "",
+    pictures: [],
+    photoError: "",
   };
 }
 
@@ -47,6 +62,8 @@ export const ActionMenuPage = {
   },
   setup(props, { emit }) {
     const store = window.ecolifeStore;
+    const externalStore = window.externalRecordsStore;
+    const pictureThumbs = reactive({});
     const todayKey = todayDateKey();
     const recordsData = ref(loadJSON(store, RECORDS_KEY, {}));
     const viewedInfo = ref(false);
@@ -164,9 +181,12 @@ export const ActionMenuPage = {
 
     function refreshEntries(actionId) {
       if (actionId === "secondhand") {
-        entryLists[actionId] = listSecondhandProducts(store);
+        entryLists[actionId] = listSecondhandProducts(externalStore);
       } else if (actionId === "repair") {
-        entryLists[actionId] = listRepairLogs(store);
+        entryLists[actionId] = listRepairLogs(externalStore);
+      }
+      for (const entry of entryLists[actionId] ?? []) {
+        for (const pid of entry.picture_ids ?? []) loadThumb(pid);
       }
     }
 
@@ -186,6 +206,65 @@ export const ActionMenuPage = {
       form.equipSuggestedTitle = guess.title;
     }
 
+    async function onPhotoInput(actionId, event) {
+      const files = Array.from(event.target.files || []);
+      event.target.value = "";
+      if (!files.length) return;
+      const form = ensureForm(actionId);
+      form.photoError = "";
+      const remaining = MAX_PICTURES - form.pictures.length;
+      for (const file of files.slice(0, remaining)) {
+        try {
+          const dataUrl = await compressImageFile(file);
+          const pid = generatePictureId();
+          await putPictureBlob(pid, dataUrl);
+          form.pictures.push({ pid, dataUrl });
+          putPhoto(pid, dataUrl).catch((err) => console.error(`写真のサーバー登録に失敗しました: ${pid}`, err));
+        } catch (err) {
+          form.photoError = "写真の読み込みに失敗しました。";
+          console.error("写真の読み込みに失敗しました", err);
+        }
+      }
+    }
+
+    async function loadThumb(pid) {
+      if (pictureThumbs[pid]) return;
+      let dataUrl = await getPictureBlob(pid);
+      if (!dataUrl) {
+        try {
+          dataUrl = await fetchPhotoAsDataUrl(pid);
+          await putPictureBlob(pid, dataUrl);
+        } catch (err) {
+          console.error(`写真の取得に失敗しました: ${pid}`, err);
+          return;
+        }
+      }
+      pictureThumbs[pid] = dataUrl;
+    }
+
+    async function retryPendingPhotoUploads() {
+      const all = loadJSON(externalStore, EXTERNAL_RECORDS_KEY, {});
+      const localPids = Object.keys(all.picture ?? {});
+      if (!localPids.length) return;
+      let serverPids;
+      try {
+        serverPids = new Set(await listServerPhotoIds());
+      } catch (err) {
+        console.error("写真アップロード状況の確認に失敗しました", err);
+        return;
+      }
+      for (const pid of localPids) {
+        if (serverPids.has(pid)) continue;
+        const dataUrl = await getPictureBlob(pid);
+        if (!dataUrl) continue;
+        try {
+          await putPhoto(pid, dataUrl);
+        } catch (err) {
+          console.error(`写真の再送信に失敗しました: ${pid}`, err);
+        }
+      }
+    }
+
     function equipLabel(equipId) {
       return equipTitle(equipItems.value, equipId);
     }
@@ -198,13 +277,16 @@ export const ActionMenuPage = {
       const form = forms[action.id];
       const name = form.name.trim();
       if (!name) return;
-      addSecondhandProduct(store, {
+      const id = addSecondhandProduct(externalStore, {
         name,
         equipId: form.equipId,
         purchaseyear: form.purchaseyear === "" ? null : form.purchaseyear,
         purchasemonth: form.purchasemonth,
         memory: form.memory.trim(),
       });
+      if (form.pictures.length) {
+        attachPicturesToProduct(externalStore, id, form.pictures.map((pic) => pic.pid));
+      }
       resetForm(action.id);
       refreshEntries(action.id);
       markDone(action);
@@ -214,13 +296,16 @@ export const ActionMenuPage = {
       const form = forms[action.id];
       const name = form.name.trim();
       if (!name) return;
-      addRepairLog(store, {
+      const logId = addRepairLog(externalStore, {
         productName: name,
         equipId: form.equipId,
         year: form.year === "" ? null : form.year,
         repairer: form.repairer,
         about: form.about.trim(),
       });
+      if (form.pictures.length) {
+        attachPicturesToRepairLog(externalStore, logId, form.pictures.map((pic) => pic.pid));
+      }
       resetForm(action.id);
       refreshEntries(action.id);
       markDone(action);
@@ -269,6 +354,10 @@ export const ActionMenuPage = {
       }
     );
 
+    onMounted(() => {
+      retryPendingPhotoUploads();
+    });
+
     return {
       selectedMode,
       selectedAction,
@@ -300,6 +389,9 @@ export const ActionMenuPage = {
       saveRepair,
       purchaseDateLabel,
       repairDateLabel,
+      onPhotoInput,
+      pictureThumbs,
+      MAX_PICTURES,
     };
   },
   template: `
