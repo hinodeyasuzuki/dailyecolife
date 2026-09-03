@@ -186,7 +186,7 @@ export const ActionMenuPage = {
         entryLists[actionId] = listRepairLogs(externalStore);
       }
       for (const entry of entryLists[actionId] ?? []) {
-        for (const pid of entry.picture_ids ?? []) loadThumb(pid);
+        for (const pid of entry.picture_ids ?? []) loadThumb(pid).catch((err) => console.error(`写真の表示に失敗しました: ${pid}`, err));
       }
     }
 
@@ -212,8 +212,8 @@ export const ActionMenuPage = {
       if (!files.length) return;
       const form = ensureForm(actionId);
       form.photoError = "";
-      const remaining = MAX_PICTURES - form.pictures.length;
-      for (const file of files.slice(0, remaining)) {
+      for (const file of files) {
+        if (form.pictures.length >= MAX_PICTURES) break;
         try {
           const dataUrl = await compressImageFile(file);
           const pid = generatePictureId();
@@ -355,7 +355,7 @@ export const ActionMenuPage = {
     );
 
     onMounted(() => {
-      retryPendingPhotoUploads();
+      retryPendingPhotoUploads().catch((err) => console.error("写真の再送信処理に失敗しました", err));
     });
 
     return {

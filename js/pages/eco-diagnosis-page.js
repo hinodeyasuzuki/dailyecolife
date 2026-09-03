@@ -5,6 +5,7 @@ import { getTodayDiagnosisItem, answerDiagnosis } from "../ecodiagnosis.js";
 import { fetchInputItems } from "../api.js";
 import { todayDateKey } from "../date.js";
 import { actionDescription } from "../action-meta.js";
+import { EXTERNAL_RECORDS_KEY } from "../external-records.js";
 
 const { ref, watch, onMounted } = Vue;
 
@@ -20,6 +21,11 @@ export const EcoDiagnosisPage = {
   },
   setup(props, { emit }) {
     const store = window.ecolifeStore;
+    const externalStore = window.externalRecordsStore;
+    const diagnosisStore = {
+      getItem: (key) => (key === EXTERNAL_RECORDS_KEY ? externalStore.getItem(key) : store.getItem(key)),
+      setItem: (key, value) => (key === EXTERNAL_RECORDS_KEY ? externalStore.setItem(key, value) : store.setItem(key, value)),
+    };
     const todayKey = todayDateKey();
 
     const inputItems = ref([]);
@@ -48,7 +54,7 @@ export const EcoDiagnosisPage = {
         if (inputItems.value.length === 0) {
           inputItems.value = await fetchInputItems((url) => fetch(url));
         }
-        diagnosisItem.value = getTodayDiagnosisItem(store, todayKey, inputItems.value);
+        diagnosisItem.value = getTodayDiagnosisItem(diagnosisStore, todayKey, inputItems.value);
       } catch (err) {
         diagnosisItem.value = null;
         loadError.value = "エコ診断を取得できませんでした。";
@@ -58,7 +64,7 @@ export const EcoDiagnosisPage = {
     function submitAnswer(val) {
       if (!diagnosisAction || !diagnosisItem.value) return;
       const completedBeforeAnswer = isDone();
-      answerDiagnosis(store, todayKey, val);
+      answerDiagnosis(diagnosisStore, todayKey, val);
       diagnosisItem.value = { ...diagnosisItem.value, answerVal: val };
       if (!completedBeforeAnswer) {
         setActionRecorded(store, todayKey, diagnosisAction.recordIndex);

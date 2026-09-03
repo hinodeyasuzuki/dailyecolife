@@ -28,6 +28,7 @@ async function withStore(mode, fn) {
     const result = fn(store);
     tx.oncomplete = () => resolve(result && result.result !== undefined ? result.result : undefined);
     tx.onerror = () => reject(tx.error || new Error("IndexedDBの操作に失敗しました"));
+    tx.onabort = () => reject(tx.error || new Error("IndexedDBの操作が中断されました"));
   });
 }
 
@@ -58,5 +59,6 @@ export async function getAllPictureBlobs() {
       resolve(result);
     };
     tx.onerror = () => reject(tx.error || new Error("IndexedDBの読み取りに失敗しました"));
+    tx.onabort = () => reject(tx.error || new Error("IndexedDBの読み取りが中断されました"));
   });
 }

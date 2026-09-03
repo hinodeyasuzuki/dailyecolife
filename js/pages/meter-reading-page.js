@@ -34,7 +34,7 @@ export const MeterReadingPage = {
     },
   },
   setup(props, { emit }) {
-    const store = window.ecolifeStore;
+    const store = window.externalRecordsStore;
     const monthKey = todayMonthKey();
     const previousKey = previousMonthKey(monthKey);
 
