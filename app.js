@@ -209,6 +209,7 @@ const app = createApp({
       currentPage.value = pageKey;
       currentPageParams.value = params;
       window.history.pushState({ dailyecolifePage: pageKey, params }, "", window.location.href);
+      window.scrollTo(0, 0);
     }
 
     function backToMenu() {
@@ -223,6 +224,7 @@ const app = createApp({
         currentPage.value = state.dailyecolifePage;
         currentPageParams.value = state.params ?? {};
         refreshRecords();
+        window.scrollTo(0, 0);
         return;
       }
       if (window.confirm("毎日エコライフを終了しますか？（保存されています）")) {
