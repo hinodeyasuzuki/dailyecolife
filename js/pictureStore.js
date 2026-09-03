@@ -2,11 +2,6 @@ const DB_NAME = "dailyecolife-pictures";
 const DB_VERSION = 1;
 const STORE_NAME = "pictures";
 
-export function generatePictureId() {
-  const random = Math.random().toString(36).slice(2, 10);
-  return `p${Date.now().toString(36)}${random}`;
-}
-
 function openDb() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);

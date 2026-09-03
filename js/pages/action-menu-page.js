@@ -14,9 +14,10 @@ import {
   addRepairLog,
   attachPicturesToProduct,
   attachPicturesToRepairLog,
+  nextPictureId,
 } from "../external-input.js";
 import { compressImageFile } from "../image.js";
-import { generatePictureId, putPictureBlob, getPictureBlob } from "../pictureStore.js";
+import { putPictureBlob, getPictureBlob } from "../pictureStore.js";
 import { putPhoto, fetchPhotoAsDataUrl, listServerPhotoIds } from "../photoApi.js";
 import { REPAIRER_OPTIONS } from "../repairer-options.js";
 
@@ -216,7 +217,7 @@ export const ActionMenuPage = {
         if (form.pictures.length >= MAX_PICTURES) break;
         try {
           const dataUrl = await compressImageFile(file);
-          const pid = generatePictureId();
+          const pid = nextPictureId(externalStore, form.pictures.map((pic) => pic.pid));
           await putPictureBlob(pid, dataUrl);
           form.pictures.push({ pid, dataUrl });
           putPhoto(pid, dataUrl).catch((err) => console.error(`写真のサーバー登録に失敗しました: ${pid}`, err));

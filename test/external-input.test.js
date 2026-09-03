@@ -8,6 +8,7 @@ import {
   addRepairLog,
   attachPicturesToProduct,
   attachPicturesToRepairLog,
+  nextPictureId,
 } from "../js/external-input.js";
 
 function createMockStore(initial = {}) {
@@ -177,4 +178,28 @@ test("attachPicturesToProduct: 存在しないproductIdを渡しても例外を�
   const saved = readSaved(store);
   assert.equal(saved.products.e999, undefined);
   assert.ok(saved.picture.p001.created_at);
+});
+
+test("nextPictureId: 未登録なら p001 を返す", () => {
+  const store = createMockStore();
+  assert.equal(nextPictureId(store), "p001");
+});
+
+test("nextPictureId: 既存のdata.pictureの最大値+1を3桁ゼロ埋めで返す", () => {
+  const store = createMockStore({
+    [EXTERNAL_RECORDS_KEY]: JSON.stringify({ picture: { p001: {}, p003: {}, p002: {} } }),
+  });
+  assert.equal(nextPictureId(store), "p004");
+});
+
+test("nextPictureId: reservedPidsに渡した同一バッチ内のpidも考慮して連番になる", () => {
+  const store = createMockStore({
+    [EXTERNAL_RECORDS_KEY]: JSON.stringify({ picture: { p001: {} } }),
+  });
+  const first = nextPictureId(store);
+  assert.equal(first, "p002");
+  const second = nextPictureId(store, [first]);
+  assert.equal(second, "p003");
+  const third = nextPictureId(store, [first, second]);
+  assert.equal(third, "p004");
 });

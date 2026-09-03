@@ -124,6 +124,13 @@ function mergePictureMetadata(all, pids) {
   return picture;
 }
 
+export function nextPictureId(store, reservedPids = []) {
+  const all = loadAll(store);
+  const picture = { ...(all.picture ?? {}) };
+  for (const pid of reservedPids) picture[pid] = true;
+  return nextId(picture, "p");
+}
+
 export function attachPicturesToProduct(store, productId, pids) {
   if (!pids.length) return;
   const all = loadAll(store);
