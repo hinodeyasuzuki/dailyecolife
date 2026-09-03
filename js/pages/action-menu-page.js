@@ -74,6 +74,9 @@ export const ActionMenuPage = {
     const equipError = ref(null);
     const forms = reactive({});
     const entryLists = reactive({});
+    const expandedEntries = reactive({});
+    const ENTRY_LIST_LIMIT = 10;
+    const MEMO_TRUNCATE_LENGTH = 100;
 
     const selectedActionId = computed(() => props.pageParams.actionId ?? null);
     const selectedAction = computed(() => {
@@ -312,6 +315,21 @@ export const ActionMenuPage = {
       markDone(action);
     }
 
+    function truncateMemo(text) {
+      if (!text || text.length <= MEMO_TRUNCATE_LENGTH) return text;
+      return `${text.slice(0, MEMO_TRUNCATE_LENGTH)}..`;
+    }
+
+    function visibleEntries(actionId) {
+      const entries = entryLists[actionId] ?? [];
+      if (expandedEntries[actionId]) return entries;
+      return entries.slice(0, ENTRY_LIST_LIMIT);
+    }
+
+    function showMoreEntries(actionId) {
+      expandedEntries[actionId] = true;
+    }
+
     function purchaseDateLabel(entry) {
       const year = entry.purchaseyear ? `${entry.purchaseyear}年` : "";
       let month = "";
@@ -384,6 +402,11 @@ export const ActionMenuPage = {
       repairerOptions,
       forms,
       entryLists,
+      expandedEntries,
+      visibleEntries,
+      showMoreEntries,
+      truncateMemo,
+      ENTRY_LIST_LIMIT,
       onNameBlur,
       equipLabel,
       saveSecondhand,
@@ -471,16 +494,23 @@ export const ActionMenuPage = {
 
             <div class="entry-list" v-if="entryLists[action.id] && entryLists[action.id].length">
               <h3 class="entry-list-title">これまでの記録</h3>
-              <div class="entry-item" v-for="entry in entryLists[action.id]" :key="entry.id">
+              <div class="entry-item" v-for="entry in visibleEntries(action.id)" :key="entry.id">
                 <p class="entry-item-name">{{ entry.name }}</p>
                 <p class="entry-item-meta">{{ equipLabel(entry.equip_id) || '未分類' }} ・ {{ purchaseDateLabel(entry) }}</p>
-                <p class="entry-item-memo" v-if="entry.memory">{{ entry.memory }}</p>
+                <p class="entry-item-memo" v-if="entry.memory">{{ truncateMemo(entry.memory) }}</p>
                 <div class="photo-thumb-list" v-if="entry.picture_ids && entry.picture_ids.length">
                   <template v-for="pid in entry.picture_ids" :key="pid">
                     <img v-if="pictureThumbs[pid]" :src="pictureThumbs[pid]" class="photo-thumb" alt="登録された写真">
                   </template>
                 </div>
               </div>
+              <button
+                type="button"
+                class="btn entry-list-more"
+                v-if="!expandedEntries[action.id] && entryLists[action.id].length > ENTRY_LIST_LIMIT"
+                @click="showMoreEntries(action.id)">
+                更に表示する({{ entryLists[action.id].length - ENTRY_LIST_LIMIT }}件)
+              </button>
             </div>
           </div>
 
@@ -549,16 +579,23 @@ export const ActionMenuPage = {
 
             <div class="entry-list" v-if="entryLists[action.id] && entryLists[action.id].length">
               <h3 class="entry-list-title">これまでの記録</h3>
-              <div class="entry-item" v-for="entry in entryLists[action.id]" :key="entry.id">
+              <div class="entry-item" v-for="entry in visibleEntries(action.id)" :key="entry.id">
                 <p class="entry-item-name">{{ entry.productName }}</p>
                 <p class="entry-item-meta">{{ repairDateLabel(entry) }}{{ entry.repairerLabel ? ' ・ ' + entry.repairerLabel : '' }}</p>
-                <p class="entry-item-memo" v-if="entry.about">{{ entry.about }}</p>
+                <p class="entry-item-memo" v-if="entry.about">{{ truncateMemo(entry.about) }}</p>
                 <div class="photo-thumb-list" v-if="entry.picture_ids && entry.picture_ids.length">
                   <template v-for="pid in entry.picture_ids" :key="pid">
                     <img v-if="pictureThumbs[pid]" :src="pictureThumbs[pid]" class="photo-thumb" alt="登録された写真">
                   </template>
                 </div>
               </div>
+              <button
+                type="button"
+                class="btn entry-list-more"
+                v-if="!expandedEntries[action.id] && entryLists[action.id].length > ENTRY_LIST_LIMIT"
+                @click="showMoreEntries(action.id)">
+                更に表示する({{ entryLists[action.id].length - ENTRY_LIST_LIMIT }}件)
+              </button>
             </div>
           </div>
 

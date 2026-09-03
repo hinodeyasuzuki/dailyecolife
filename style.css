@@ -522,6 +522,10 @@ input:focus-visible {
   background: #f8fbf6;
 }
 
+.entry-list-more {
+  width: 100%;
+}
+
 .photo-picker {
   display: flex;
   flex-wrap: wrap;
