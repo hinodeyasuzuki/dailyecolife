@@ -522,6 +522,36 @@ input:focus-visible {
   background: #f8fbf6;
 }
 
+.photo-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.photo-picker-btn {
+  position: relative;
+}
+
+.photo-input {
+  display: none;
+}
+
+.photo-thumb-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.photo-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
 .entry-item-name {
   margin: 0;
   font-weight: 700;
