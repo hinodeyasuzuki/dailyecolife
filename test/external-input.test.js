@@ -6,6 +6,8 @@ import {
   listRepairLogs,
   addSecondhandProduct,
   addRepairLog,
+  attachPicturesToProduct,
+  attachPicturesToRepairLog,
 } from "../js/external-input.js";
 
 function createMockStore(initial = {}) {
@@ -137,4 +139,42 @@ test("listRepairLogs: repairerLabelにコードから解決したラベルを持
   const list = listRepairLogs(store);
   assert.equal(list.find((l) => l.productName === "自転車").repairerLabel, "修理施設");
   assert.equal(list.find((l) => l.productName === "扇風機").repairerLabel, "");
+});
+
+test("attachPicturesToProduct: productのpicture_idsに追加しdata.pictureにメタデータを作る", () => {
+  const store = createMockStore();
+  const id = addSecondhandProduct(store, { name: "冷蔵庫", equipId: "", purchaseyear: null, purchasemonth: -1, memory: "" });
+  attachPicturesToProduct(store, id, ["p001", "p002"]);
+  const saved = readSaved(store);
+  assert.deepEqual(saved.products[id].picture_ids, ["p001", "p002"]);
+  assert.ok(saved.picture.p001.created_at);
+  assert.equal(saved.picture.p001.memo, "");
+  assert.equal(saved.picture.p001.sourceUrl, "");
+  assert.ok(saved.picture.p002.created_at);
+});
+
+test("attachPicturesToProduct: 既存のpicture_idsを保持したまま追加する", () => {
+  const store = createMockStore();
+  const id = addSecondhandProduct(store, { name: "冷蔵庫", equipId: "", purchaseyear: null, purchasemonth: -1, memory: "" });
+  attachPicturesToProduct(store, id, ["p001"]);
+  attachPicturesToProduct(store, id, ["p002"]);
+  const saved = readSaved(store);
+  assert.deepEqual(saved.products[id].picture_ids, ["p001", "p002"]);
+});
+
+test("attachPicturesToRepairLog: repairlogのpicture_idsに追加しdata.pictureにメタデータを作る", () => {
+  const store = createMockStore();
+  const logId = addRepairLog(store, { productName: "扇風機", equipId: "", year: null, repairer: "", about: "" });
+  attachPicturesToRepairLog(store, logId, ["p010"]);
+  const saved = readSaved(store);
+  assert.deepEqual(saved.repairlog[logId].picture_ids, ["p010"]);
+  assert.ok(saved.picture.p010.created_at);
+});
+
+test("attachPicturesToProduct: 存在しないproductIdを渡しても例外を投げずpictureメタデータだけ作る", () => {
+  const store = createMockStore();
+  attachPicturesToProduct(store, "e999", ["p001"]);
+  const saved = readSaved(store);
+  assert.equal(saved.products.e999, undefined);
+  assert.ok(saved.picture.p001.created_at);
 });

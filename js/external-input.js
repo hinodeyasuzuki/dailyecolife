@@ -114,3 +114,36 @@ export function addRepairLog(store, { productName, equipId, year, repairer, abou
   saveJSON(store, EXTERNAL_RECORDS_KEY, { ...all, products, repairlog });
   return logId;
 }
+
+function mergePictureMetadata(all, pids) {
+  const picture = { ...(all.picture ?? {}) };
+  const now = new Date().toISOString();
+  for (const pid of pids) {
+    picture[pid] = { memo: "", created_at: now, sourceUrl: "" };
+  }
+  return picture;
+}
+
+export function attachPicturesToProduct(store, productId, pids) {
+  if (!pids.length) return;
+  const all = loadAll(store);
+  const picture = mergePictureMetadata(all, pids);
+  const products = { ...(all.products ?? {}) };
+  const target = products[productId];
+  if (target) {
+    products[productId] = { ...target, picture_ids: [...(target.picture_ids ?? []), ...pids] };
+  }
+  saveJSON(store, EXTERNAL_RECORDS_KEY, { ...all, picture, products });
+}
+
+export function attachPicturesToRepairLog(store, logId, pids) {
+  if (!pids.length) return;
+  const all = loadAll(store);
+  const picture = mergePictureMetadata(all, pids);
+  const repairlog = { ...(all.repairlog ?? {}) };
+  const target = repairlog[logId];
+  if (target) {
+    repairlog[logId] = { ...target, picture_ids: [...(target.picture_ids ?? []), ...pids] };
+  }
+  saveJSON(store, EXTERNAL_RECORDS_KEY, { ...all, picture, repairlog });
+}
