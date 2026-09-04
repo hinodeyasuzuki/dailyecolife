@@ -116,7 +116,7 @@ export const QuizPage = {
                 {{ quiz.question['option' + n] }}
               </button>
             </div>
-            <p v-if="quiz.answeredOption !== null" class="detail-result">
+            <p v-if="quiz.answeredOption !== null" class="detail-result" :class="{ correct: quiz.correct, incorrect: !quiz.correct }">
               {{ quiz.correct ? '正解！' : '不正解' }} - {{ quiz.question.explanation }}
             </p>
           </template>

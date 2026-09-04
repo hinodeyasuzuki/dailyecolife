@@ -34,18 +34,21 @@ body {
     radial-gradient(circle, rgba(18, 122, 88, 0.07) 1.6px, transparent 1.6px) 0 0 / 26px 26px,
     var(--bg);
   background-attachment: fixed;
-  font-family: "Avenir Next", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", sans-serif;
+  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic", "Meiryo", sans-serif;
   line-height: 1.6;
 }
 
 #app {
-  max-width: 780px;
+  max-width: 960px;
   margin: 0 auto;
   padding: 18px 14px 32px;
 }
 
 .mt-10 {
   margin-top: 10px;
+}
+.mt-30 {
+  margin-top: 30px;
 }
 .center {
   text-align: center;
@@ -370,10 +373,18 @@ input:focus-visible {
 }
 
 .detail-result {
-  margin: 4px 0 0;
+  margin: 10px;
+  margin-left:3em;
   padding: 10px;
   border-radius: 10px;
   background: #f3f8ef;
+}
+.detail-result.correct {
+  background: #dff3e6;
+}
+.detail-result.incorrect {
+  background: #fbe4e4;
+  color: #912d2d;
 }
 
 .btn {
@@ -701,19 +712,32 @@ input:focus-visible {
 
 .app-footer {
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
   gap: 16px;
   margin-top: 28px;
   padding: 16px 0 0;
   border-top: 1px solid var(--line);
 }
 
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+}
+
+.footer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .footer-link {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--muted);
 }
 .footer-text {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
 }
 
 .modal-backdrop {
@@ -727,7 +751,7 @@ input:focus-visible {
 }
 
 .modal-content {
-  width: min(100%, 480px);
+  width: min(100%, 680px);
   max-height: calc(100vh - 36px);
   overflow-y: auto;
   display: grid;
@@ -738,12 +762,14 @@ input:focus-visible {
   background: var(--card);
   box-shadow: var(--shadow);
   font-size:80%;
+  position:absolute;
 }
 
 .modal-content h2,
 .modal-content p {
   margin: 0;
 }
+.modal-close { position: absolute; top: 14px; right: 14px;  color: var(--ink); font-size: 1rem; cursor: pointer; }
 
 .consent-check {
   display: flex;

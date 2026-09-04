@@ -7,7 +7,11 @@ import { todayDateKey } from "../date.js";
 import { actionDescription } from "../action-meta.js";
 import { EXTERNAL_RECORDS_KEY } from "../external-records.js";
 
-const { ref, watch, onMounted } = Vue;
+const { ref, computed, watch, onMounted } = Vue;
+
+function isPlaceholderOption(opt) {
+  return opt.disp === "選んで下さい";
+}
 
 const diagnosisAction = ACTIONS.find((a) => a.type === "eco-diagnosis");
 
@@ -61,6 +65,8 @@ export const EcoDiagnosisPage = {
       }
     }
 
+    const visibleOptions = computed(() => (diagnosisItem.value?.item?.options ?? []).filter((opt) => !isPlaceholderOption(opt)));
+
     function submitAnswer(val) {
       if (!diagnosisAction || !diagnosisItem.value) return;
       const completedBeforeAnswer = isDone();
@@ -94,6 +100,7 @@ export const EcoDiagnosisPage = {
       submitAnswer,
       loadDiagnosis,
       actionDescription,
+      visibleOptions,
     };
   },
   template: `
@@ -114,7 +121,7 @@ export const EcoDiagnosisPage = {
           <template v-else-if="diagnosisItem && diagnosisItem.item">
             <p class="detail-question">{{ diagnosisItem.item.title }}</p>
             <p>{{ diagnosisItem.item.text }}</p>
-            <div v-for="opt in diagnosisItem.item.options" :key="opt.val">
+            <div v-for="opt in visibleOptions" :key="opt.val">
               <button class="btn option-btn" :class="{ selected: diagnosisItem.answerVal === opt.val }" @click="submitAnswer(opt.val)">
                 {{ opt.disp }}
               </button>

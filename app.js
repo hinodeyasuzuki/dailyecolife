@@ -357,8 +357,8 @@ const app = createApp({
   template: `
     <div>
       <header class="app-header" @click="currentPage !== 'menu' && backToMenu()">
-        <a class="series-name" href="../ehome/" @click.stop>🌿 エコライフ手帖</a>
-        <h1><span id="tenant-heading"></span>毎日エコライフ（{{ displayDate }}）</h1>
+        <a class="series-name" href="../ehome/" @click.stop>🌿エコライフ手帖</a>
+        <h1><span id="tenant-heading"></span>◒ 毎日エコライフ（{{ displayDate }}）</h1>
         <div class="point-stats">
           <div class="point-stat point-stat-today">
             <span class="point-stat-icon" aria-hidden="true">🌱</span>
@@ -407,19 +407,21 @@ const app = createApp({
           :page-params="currentPageParams"
           @updated="handleUpdated"
           @point-earned="handlePointEarned"></component>
-        <button class="btn btn-ghost mt-10" @click="backToMenu">< メニューに戻る</button>
+        <button class="btn btn-ghost mt-30" @click="backToMenu">< メニューに戻る</button>
       </section>
 
       <footer class="app-footer">
-        <a class="btn btn-ghost footer-link" href="../ehome/">エコライフ手帖</a><span class="footer-text"> | 毎日エコライフ</span>
-        <button type="button" class="btn btn-ghost footer-link" @click="showPrivacyPolicy = true">プライバシーポリシー</button>
-        <button type="button" class="btn btn-ghost footer-link" @click="showAbout = true">このアプリについて</button>
+        <span class="footer-brand"><span class="footer-text">毎日エコライフ | </span><a class="btn btn-ghost footer-link" href="../ehome/">🌿エコライフ手帖</a></span>
+        <span class="footer-actions">
+          <button type="button" class="btn btn-ghost footer-link" @click="showPrivacyPolicy = true">プライバシーポリシー</button>
+          <button type="button" class="btn btn-ghost footer-link" @click="showAbout = true">このアプリについて</button>
+        </span>
       </footer>
 
       <div v-if="showWelcome" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
         <section class="modal-content">
-          <p class="series-name">エコライフ手帖</p>
-          <h2 id="welcome-title">毎日エコライフへようこそ</h2>
+          <p class="series-name">🌿エコライフ手帖</p>
+          <h2 id="welcome-title">◒ 毎日エコライフへようこそ</h2>
           <p>日々の小さな行動を記録し、ポイントとして振り返るアプリです。</p>
           <p>記録はブラウザに保存され、同期時にCookieセッションに対応するサーバーへ保存されます。</p>
           <label class="consent-check">
@@ -433,20 +435,20 @@ const app = createApp({
 
       <div v-if="showPrivacyPolicy" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="privacy-title">
         <section class="modal-content">
-          <h2 id="privacy-title">エコライフ手帖の利用方針</h2>
+          <h2 id="privacy-title">プライバシーと情報の取り扱い</h2>
+          <button class="modal-close" type="button" data-close-modal="info" @click="showPrivacyPolicy = false" aria-label="閉じる">×</button>
           <div v-html="privacyPolicyHtml"></div>
-          <button type="button" class="btn" @click="showPrivacyPolicy = false">閉じる</button>
         </section>
       </div>
 
       <div v-if="showAbout" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="about-title">
         <section class="modal-content">
           <h2 id="about-title">このアプリについて</h2>
+          <button class="modal-close" type="button" data-close-modal="info" @click="showAbout = false" aria-label="閉じる">×</button>
           <p>毎日エコライフは、日常でできる環境配慮行動を記録し、学習し、楽しみながら継続するためのアプリです。</p>
           <p>クイズ、エコチェック、検針票記録などを通して、暮らしの中の環境との関わりを見つめます。</p>
           <p>「エコライフ手帖」のパッケージの一つです。</p>
           <p><a href="https://www.hinodeya-ecolife.com/" target="_blank" rel="noopener noreferrer">有限会社ひのでやエコライフ研究所</a>が提供しています。</p>
-          <button type="button" class="btn" @click="showAbout = false">閉じる</button>
         </section>
       </div>
 
